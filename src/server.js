@@ -66,6 +66,14 @@ app.get("/api/debug-supabase", (req, res) => {
   });
 });
 
+// ✅ Test endpoint nr 2
+app.get("/api/test2", (req, res) => {
+  res.json({
+    message: "✅ Test 2 działa poprawnie!",
+    time: new Date().toISOString(),
+  });
+});
+
 // ✅ Serwujemy pliki z folderu public
 app.use(express.static(path.join(__dirname, "../public")));
 
@@ -74,4 +82,5 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
+// 🚀 Export na końcu, aby złapał WSZYSTKIE endpointy
 export default app;
