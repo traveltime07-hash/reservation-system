@@ -42,3 +42,10 @@ app.use('/api/payments', paymentsRouter);
 app.use(express.static(path.join(__dirname, '../public')));
 
 export default app;
+// debug-env
+app.get('/api/debug-env', (req, res) => {
+  res.json({
+    databaseUrl: process.env.DATABASE_URL ? "OK - found" : "NOT FOUND",
+    raw: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + "..." : null
+  });
+});
