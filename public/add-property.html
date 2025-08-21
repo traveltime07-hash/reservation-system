@@ -1,58 +1,49 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AWON – Dodaj nowy obiekt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <title>AWON – Dodaj obiekt</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="form-card">
-    <h1>AWON</h1>
-    <h2>Dodaj nowy obiekt</h2>
-    <form id="addPropertyForm">
-      <input type="text" id="name" placeholder="Nazwa obiektu" required />
-      <input type="text" id="address" placeholder="Adres" />
-      <textarea id="description" placeholder="Opis obiektu" rows="4"></textarea>
-      <button type="submit">Zapisz obiekt</button>
+  <div class="container">
+    <h1>Dodaj nowy obiekt</h1>
+    <form id="add-property-form">
+      <input type="text" id="name" placeholder="Nazwa obiektu" required><br>
+      <input type="text" id="address" placeholder="Adres" required><br>
+      <textarea id="description" placeholder="Opis"></textarea><br>
+      <button type="submit">Dodaj obiekt</button>
     </form>
-    <a href="/dashboard.html">⬅ Wróć do panelu</a>
+    <a href="dashboard.html"><button>Powrót do panelu</button></a>
   </div>
 
   <script>
-    document.getElementById("addPropertyForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+    document
+      .getElementById("add-property-form")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem("token");
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Musisz się zalogować!");
-        window.location.href = "/login.html";
-        return;
-      }
+        const res = await fetch("/api/properties", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: document.getElementById("name").value,
+            address: document.getElementById("address").value,
+            description: document.getElementById("description").value,
+          }),
+        });
 
-      const body = {
-        name: document.getElementById("name").value,
-        address: document.getElementById("address").value,
-        description: document.getElementById("description").value
-      };
-
-      const res = await fetch("/api/properties", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify(body)
+        if (res.ok) {
+          alert("Obiekt dodany!");
+          window.location.href = "dashboard.html";
+        } else {
+          alert("Błąd przy dodawaniu obiektu.");
+        }
       });
-
-      if (res.ok) {
-        alert("Obiekt został dodany!");
-        window.location.href = "/dashboard.html";
-      } else {
-        const err = await res.json();
-        alert("Błąd: " + (err.message || "Nie udało się zapisać"));
-      }
-    });
   </script>
 </body>
 </html>
