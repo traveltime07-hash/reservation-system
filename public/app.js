@@ -1,27 +1,50 @@
-async function fetchData(endpoint, elementId, formatter) {
+// Funkcja pomocnicza: pobierz dane z API i pokaż w elemencie UL
+async function loadData(endpoint, ulId) {
+  const ul = document.getElementById(ulId);
+  ul.innerHTML = "<li>⏳ Ładowanie...</li>";
+
   try {
     const res = await fetch(`/api/${endpoint}`);
+    if (!res.ok) throw new Error(`Błąd HTTP: ${res.status}`);
     const data = await res.json();
-    const list = document.getElementById(elementId);
-    list.innerHTML = "";
 
-    if (Array.isArray(data) && data.length > 0) {
-      data.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = formatter ? formatter(item) : JSON.stringify(item);
-        list.appendChild(li);
-      });
-    } else {
-      list.innerHTML = "<li>Brak danych</li>";
+    if (!data || data.length === 0) {
+      ul.innerHTML = "<li>Brak danych</li>";
+      return;
     }
+
+    ul.innerHTML = "";
+    data.forEach(item => {
+      let text = "";
+      switch (endpoint) {
+        case "properties":
+          text = `${item.name} (${item.city})`;
+          break;
+        case "rooms":
+          text = `Pokój: ${item.name} — obiekt #${item.property_id}`;
+          break;
+        case "bookings":
+          text = `Rezerwacja #${item.id}: od ${item.from_date} do ${item.to_date}`;
+          break;
+        case "payments":
+          text = `Płatność #${item.id}: ${item.amount} PLN, status: ${item.status}`;
+          break;
+        default:
+          text = JSON.stringify(item);
+      }
+      const li = document.createElement("li");
+      li.textContent = text;
+      ul.appendChild(li);
+    });
   } catch (err) {
-    console.error(err);
-    document.getElementById(elementId).innerHTML = "<li>Błąd ładowania</li>";
+    ul.innerHTML = `<li style="color:red;">❌ Błąd: ${err.message}</li>`;
   }
 }
 
-// --- Wywołania API z prostym formatowaniem ---
-fetchData("properties", "properties", (item) => `${item.name} (${item.city})`);
-fetchData("rooms", "rooms", (item) => `Pokój: ${item.name || item.id}`);
-fetchData("bookings", "bookings", (item) => `Rezerwacja ID: ${item.id} od ${item.from_date} do ${item.to_date}`);
-fetchData("payments", "payments", (item) => `Płatność: ${item.amount || "?"} (${item.status || "brak statusu"})`);
+// Po załadowaniu strony — odpal wszystkie
+window.addEventListener("DOMContentLoaded", () => {
+  loadData("properties", "properties");
+  loadData("rooms", "rooms");
+  loadData("bookings", "bookings");
+  loadData("payments", "payments");
+});
