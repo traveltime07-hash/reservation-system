@@ -1,25 +1,30 @@
-import { Router } from 'express';
-import { pool } from '../db.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { Router } from "express";
+import { pool } from "../db.js";
 
 const router = Router();
 
-// list all
-router.get('/properties', async (req, res) => {
-  const { rows } = await pool.query('SELECT id, name, city, address, description FROM properties ORDER BY id');
-  res.json(rows);
+// pobierz wszystkie obiekty
+router.get("/properties", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM properties ORDER BY id ASC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// create (owner)
-router.post('/properties', requireAuth, requireRole('owner'), async (req, res) => {
-  const { name, city, address, description } = req.body;
-  if (!name) return res.status(400).json({ error: 'Brak nazwy' });
-  const { rows } = await pool.query(
-    `INSERT INTO properties (name, city, address, description, owner_id)
-     VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [name, city, address, description, req.user.id]
-  );
-  res.status(201).json(rows[0]);
+// dodaj obiekt
+router.post("/properties", async (req, res) => {
+  const { name, address } = req.body;
+  try {
+    const result = await pool.query(
+      "INSERT INTO properties (name, address) VALUES ($1, $2) RETURNING *",
+      [name, address]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
