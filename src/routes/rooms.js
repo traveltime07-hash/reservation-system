@@ -1,32 +1,30 @@
-import { Router } from 'express';
-import { pool } from '../db.js';
+import { Router } from "express";
+import { pool } from "../db.js";
+
 const router = Router();
 
-router.get('/rooms', async (req, res) => {
-  const propertyId = req.query.property_id;
-  let rows;
-  if (propertyId) {
-    ({ rows } = await pool.query(
-      'SELECT id, property_id, name, capacity, price_per_night FROM rooms WHERE property_id=$1 ORDER BY id',
-      [propertyId]
-    ));
-  } else {
-    ({ rows } = await pool.query(
-      'SELECT id, property_id, name, capacity, price_per_night FROM rooms ORDER BY id'
-    ));
+// pobierz wszystkie pokoje
+router.get("/rooms", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM rooms ORDER BY id ASC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json(rows);
 });
 
-router.post('/rooms', async (req, res) => {
-  const { property_id, name, capacity, price_per_night } = req.body;
-  if (!property_id || !name) return res.status(400).json({ error: 'Brak wymaganych pól' });
-  const { rows } = await pool.query(
-    `INSERT INTO rooms (property_id, name, capacity, price_per_night)
-     VALUES ($1,$2,$3,$4) RETURNING *`,
-    [property_id, name, capacity || 1, price_per_night || 0]
-  );
-  res.status(201).json(rows[0]);
+// dodaj pokój
+router.post("/rooms", async (req, res) => {
+  const { property_id, name, capacity, price } = req.body;
+  try {
+    const result = await pool.query(
+      "INSERT INTO rooms (property_id, name, capacity, price) VALUES ($1, $2, $3, $4) RETURNING *",
+      [property_id, name, capacity, price]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
