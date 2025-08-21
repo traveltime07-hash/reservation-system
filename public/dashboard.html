@@ -1,99 +1,62 @@
-<!doctype html>
-<html lang="pl">
-<head>
-  <meta charset="utf-8" />
-  <title>AWON – Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Witaj w AWON!</h1>
-    <p id="userEmail"></p>
-    <button onclick="logout()">Wyloguj się</button>
-  </div>
-
-  <script>
-    async function loadUser() {
-      const token = localStorage.getItem("token");
-      if (!token) return window.location.href = "/login.html";
-
-      const res = await fetch("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        document.getElementById("userEmail").innerText =
-          "Zalogowany jako: " + data.user.email;
-      } else {
-        localStorage.removeItem("token");
-        window.location.href = "/login.html";
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      window.location.href = "/login.html";
-    }
-
-    loadUser();
-  </script>
-</body>
-</html>
-<section>
-  <h2>Moje obiekty</h2>
-  <form id="property-form">
-    <input type="text" id="property-name" placeholder="Nazwa obiektu" required />
-    <input type="text" id="property-address" placeholder="Adres" />
-    <textarea id="property-description" placeholder="Opis"></textarea>
-    <button type="submit">Dodaj obiekt</button>
-  </form>
-
-  <div id="properties-list"></div>
-</section>
+<main class="container">
+  <h2>Twoje obiekty</h2>
+  <div id="propertiesList" class="stats"></div>
+  <a href="/add-property.html" class="btn">+ Dodaj nowy obiekt</a>
+</main>
 
 <script>
+async function loadProperties() {
   const token = localStorage.getItem("token");
-
-  // Obsługa formularza
-  document.getElementById("property-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("property-name").value;
-    const address = document.getElementById("property-address").value;
-    const description = document.getElementById("property-description").value;
-
-    const res = await fetch("/api/properties", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ name, address, description })
-    });
-
-    const data = await res.json();
-    alert("Dodano obiekt: " + data.name);
-    loadProperties();
-  });
-
-  // Pobieranie listy obiektów
-  async function loadProperties() {
-    const res = await fetch("/api/properties", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const properties = await res.json();
-
-    const list = document.getElementById("properties-list");
-    list.innerHTML = properties.map(p => `
-      <div class="property-card">
-        <h3>${p.name}</h3>
-        <p>${p.address || ""}</p>
-        <p>${p.description || ""}</p>
-      </div>
-    `).join("");
+  if (!token) {
+    document.getElementById("propertiesList").innerHTML = "<p>Musisz się zalogować</p>";
+    return;
   }
 
-  loadProperties();
+  const res = await fetch("/api/properties", {
+    headers: { "Authorization": "Bearer " + token }
+  });
+  const data = await res.json();
+
+  const list = document.getElementById("propertiesList");
+  list.innerHTML = "";
+
+  if (data.length === 0) {
+    list.innerHTML = "<p>Nie masz jeszcze żadnych obiektów.</p>";
+    return;
+  }
+
+  data.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "stat-box";
+    div.innerHTML = `
+      <h3>${p.name}</h3>
+      <p>${p.address || "Brak adresu"}</p>
+      <small>${p.description || ""}</small>
+      <div style="margin-top:10px;">
+        <button onclick="deleteProperty(${p.id})" class="btn-secondary">Usuń</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+async function deleteProperty(id) {
+  const token = localStorage.getItem("token");
+  if (!confirm("Na pewno usunąć obiekt?")) return;
+
+  const res = await fetch("/api/properties/" + id, {
+    method: "DELETE",
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  if (res.ok) {
+    alert("Obiekt usunięty");
+    loadProperties();
+  } else {
+    const data = await res.json();
+    alert("Błąd: " + data.error);
+  }
+}
+
+loadProperties();
 </script>
-<a href="/add-property.html" class="btn">Dodaj obiekt</a>
