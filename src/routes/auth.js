@@ -1,86 +1,82 @@
 import express from "express";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 
 const router = express.Router();
 
-// ===============================
-// 🔹 Rejestracja użytkownika
-// ===============================
+// ✅ Rejestracja
 router.post("/register", async (req, res) => {
+  console.log("➡️ /register hit:", req.body);
+
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email i hasło są wymagane" });
+  }
+
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email i hasło są wymagane" });
+    // Sprawdź, czy użytkownik istnieje
+    const userCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ error: "Użytkownik już istnieje" });
     }
 
-    // Sprawdź, czy użytkownik już istnieje
-    const userExists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (userExists.rows.length > 0) {
-      return res.status(400).json({ message: "Użytkownik z tym e-mailem już istnieje" });
-    }
+    // Hashowanie hasła
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Hash hasła
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Zapisz użytkownika
-    const newUser = await pool.query(
-      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, created_at",
+    // Wstaw nowego użytkownika
+    const result = await pool.query(
+      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email",
       [email, hashedPassword]
     );
 
-    res.status(201).json({
-      message: "Użytkownik zarejestrowany pomyślnie",
-      user: newUser.rows[0],
-    });
+    console.log("✅ Użytkownik zarejestrowany:", result.rows[0]);
+
+    res.status(201).json({ user: result.rows[0] });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Błąd serwera" });
+    console.error("❌ Błąd w /register:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ===============================
-// 🔹 Logowanie użytkownika
-// ===============================
+// ✅ Logowanie
 router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  console.log("➡️ /login hit:", req.body);
 
-    // Sprawdź czy istnieje użytkownik
-    const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (user.rows.length === 0) {
-      return res.status(400).json({ message: "Nieprawidłowy email lub hasło" });
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email i hasło są wymagane" });
+  }
+
+  try {
+    const userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ error: "Nieprawidłowe dane logowania" });
     }
 
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    const user = userResult.rows[0];
+
+    // Sprawdź hasło
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).json({ message: "Nieprawidłowy email lub hasło" });
+      return res.status(401).json({ error: "Nieprawidłowe dane logowania" });
     }
 
     // Token JWT
     const token = jwt.sign(
-      { id: user.rows[0].id, email: user.rows[0].email },
+      { id: user.id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    // Zapisz ostatnie logowanie
-    await pool.query("UPDATE users SET last_login = NOW() WHERE id = $1", [user.rows[0].id]);
+    console.log("✅ Użytkownik zalogowany:", user.email);
 
-    res.json({
-      message: "Zalogowano pomyślnie",
-      token,
-      user: {
-        id: user.rows[0].id,
-        email: user.rows[0].email,
-      },
-    });
+    res.json({ token, user: { id: user.id, email: user.email } });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Błąd serwera" });
+    console.error("❌ Błąd w /login:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
