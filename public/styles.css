@@ -6,27 +6,25 @@
 }
 
 :root {
-  --primary-color: #06b6d4; /* turkus */
-  --primary-gradient: linear-gradient(135deg, #06b6d4, #3b82f6);
-  --dark-bg: #1e293b;
-  --light-bg: #f1f5f9;
-  --card-bg: #ffffff;
-  --text-dark: #1e293b;
-  --text-light: #64748b;
+  --primary-color: #0070f3;
+  --secondary-color: #00c6ff;
+  --dark-color: #333;
+  --light-bg: #f9f9f9;
+  --primary-gradient: linear-gradient(135deg, #0070f3, #00c6ff);
 }
 
-/* Body */
+/* Base */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
+  color: var(--dark-color);
   background: var(--light-bg);
-  color: var(--text-dark);
 }
 
 /* Layout */
 .container {
   width: 90%;
-  max-width: 1100px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -35,40 +33,39 @@ body {
 .hero {
   background: var(--primary-gradient);
   color: #fff;
-  padding: 80px 20px;
+  padding: 60px 20px;
   text-align: center;
-  border-bottom: 6px solid var(--dark-bg);
-  border-radius: 0 0 2rem 2rem;
+  border-bottom: 4px solid #005bb5;
+  border-radius: 0 0 12px 12px;
 }
 
 .hero h1 {
-  font-size: 3rem;
-  margin-bottom: 20px;
-  font-weight: bold;
+  font-size: 2.5rem;
+  margin-bottom: 15px;
 }
 
 .hero p {
-  font-size: 1.3rem;
-  margin-bottom: 30px;
+  font-size: 1.2rem;
+  margin-bottom: 25px;
 }
 
 .cta-buttons {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 15px;
 }
 
 /* Buttons */
 .btn {
   display: inline-block;
-  padding: 14px 28px;
+  padding: 12px 24px;
   background: #fff;
   color: var(--primary-color);
   font-weight: bold;
   text-decoration: none;
-  border-radius: 10px;
-  transition: 0.3s;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .btn:hover {
@@ -77,59 +74,35 @@ body {
 }
 
 .btn-secondary {
-  background: var(--dark-bg);
+  background: var(--dark-color);
   color: #fff;
 }
 
 .btn-secondary:hover {
-  background: #334155;
+  background: #555;
 }
 
-/* Cards / Sections */
+/* Sections */
 main section {
-  background: var(--card-bg);
-  padding: 30px;
-  margin: 30px 0;
-  border-radius: 1rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-  transition: 0.3s;
-}
-
-main section:hover {
-  transform: translateY(-4px);
+  background: #fff;
+  padding: 25px;
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 main h2 {
   margin-bottom: 15px;
   color: var(--primary-color);
-  font-size: 1.6rem;
-  border-bottom: 2px solid var(--light-bg);
-  padding-bottom: 8px;
-}
-
-/* Lists inside cards */
-section ul {
-  list-style: none;
-  margin-top: 15px;
-}
-
-section ul li {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  color: var(--text-light);
-}
-
-section ul li:last-child {
-  border-bottom: none;
 }
 
 /* Formularze AWON */
 .form-card {
-  background: var(--card-bg);
-  color: var(--text-dark);
+  background: #fff;
+  color: #333;
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 400px;
   margin: 2rem auto;
@@ -142,16 +115,16 @@ section ul li:last-child {
 }
 
 .form-card h2 {
-  color: var(--text-light);
+  color: #444;
   margin-bottom: 1rem;
 }
 
 .form-card input {
   width: 100%;
-  padding: 0.8rem;
-  margin: 0.6rem 0;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
   border: 1px solid #ccc;
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
   font-size: 1rem;
 }
 
@@ -159,8 +132,8 @@ section ul li:last-child {
   background: var(--primary-gradient);
   color: #fff;
   border: none;
-  padding: 0.9rem 1.5rem;
-  border-radius: 0.6rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
   transition: 0.3s;
@@ -186,10 +159,61 @@ section ul li:last-child {
 /* Footer */
 footer {
   text-align: center;
-  padding: 30px;
+  padding: 20px;
   font-size: 0.9rem;
-  background: var(--dark-bg);
-  color: #fff;
-  margin-top: 40px;
-  border-radius: 1rem 1rem 0 0;
+  background: #eee;
+  color: #666;
+  border-top: 2px solid #ddd;
+  margin-top: 30px;
+  border-radius: 12px 12px 0 0;
+}
+
+/* ---------------- */
+/* RESPONSYWNOŚĆ    */
+/* ---------------- */
+
+/* Tablety */
+@media (max-width: 992px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .container {
+    width: 95%;
+  }
+}
+
+/* Telefony */
+@media (max-width: 768px) {
+  .cta-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hero {
+    padding: 40px 15px;
+  }
+
+  main section {
+    padding: 20px;
+  }
+}
+
+/* Bardzo małe telefony */
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 1.6rem;
+  }
+
+  .hero p {
+    font-size: 0.9rem;
+  }
+
+  .form-card {
+    padding: 1.5rem;
+  }
 }
