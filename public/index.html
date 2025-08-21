@@ -2,97 +2,74 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>System Rezerwacji — Logowanie</title>
+  <title>System Rezerwacji — Strona Główna</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="container">
-    <h1>System Rezerwacji</h1>
-    <p>Zaloguj się lub zarejestruj, aby zarządzać swoimi obiektami i rezerwacjami.</p>
+    <header>
+      <h1>System Rezerwacji Online</h1>
+      <p>Zarządzaj rezerwacjami apartamentów i płatnościami w prosty sposób.</p>
+    </header>
 
-    <!-- Formularz logowania -->
-    <section class="card">
-      <h2>Logowanie</h2>
-      <form id="loginForm">
-        <label>Email:
-          <input type="email" id="loginEmail" required />
-        </label>
-        <label>Hasło:
-          <input type="password" id="loginPassword" required />
-        </label>
-        <button type="submit">Zaloguj</button>
-      </form>
-      <div id="loginMessage"></div>
-    </section>
+    <main>
+      <section class="card">
+        <h2>Dlaczego warto?</h2>
+        <ul>
+          <li>✅ Prosta obsługa dla właścicieli i klientów</li>
+          <li>✅ Automatyczne potwierdzenia rezerwacji</li>
+          <li>✅ Bezpieczne płatności online</li>
+          <li>✅ Statystyki i pełna kontrola nad obiektami</li>
+        </ul>
+      </section>
 
-    <!-- Formularz rejestracji -->
-    <section class="card">
-      <h2>Rejestracja</h2>
-      <form id="registerForm">
-        <label>Email:
-          <input type="email" id="registerEmail" required />
-        </label>
-        <label>Hasło:
-          <input type="password" id="registerPassword" required />
-        </label>
-        <button type="submit">Zarejestruj</button>
-      </form>
-      <div id="registerMessage"></div>
-    </section>
+      <section class="card auth">
+        <h2>Zaloguj się</h2>
+        <form id="loginForm">
+          <label>Email:<br>
+            <input type="email" id="email" required />
+          </label><br><br>
+          <label>Hasło:<br>
+            <input type="password" id="password" required />
+          </label><br><br>
+          <button type="submit">Zaloguj</button>
+        </form>
+        <p>
+          <a href="/register.html">Rejestracja</a> |
+          <a href="/forgot-password.html">Zapomniałem hasła</a>
+        </p>
+      </section>
+    </main>
 
-    <footer>© 2025 — System Rezerwacji</footer>
+    <footer>
+      © 2025 — System Rezerwacji Online
+    </footer>
   </div>
 
   <script>
-    const apiBase = "/api/auth";
-
-    // Logowanie
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById("loginEmail").value;
-      const password = document.getElementById("loginPassword").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
       try {
-        const res = await fetch(apiBase + "/login", {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
         });
+
         const data = await res.json();
         if (res.ok) {
-          localStorage.setItem("token", data.token);
-          document.getElementById("loginMessage").textContent = "✅ Zalogowano!";
-          // przekierowanie do panelu
-          window.location.href = "/panel.html";
+          alert("Zalogowano pomyślnie!");
+          // po zalogowaniu przekierowanie do panelu demo
+          window.location.href = "/demo.html";
         } else {
-          document.getElementById("loginMessage").textContent = "❌ " + data.message;
+          alert("Błąd: " + data.message);
         }
       } catch (err) {
-        document.getElementById("loginMessage").textContent = "Błąd połączenia.";
-      }
-    });
-
-    // Rejestracja
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("registerEmail").value;
-      const password = document.getElementById("registerPassword").value;
-
-      try {
-        const res = await fetch(apiBase + "/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById("registerMessage").textContent = "✅ Konto utworzone!";
-        } else {
-          document.getElementById("registerMessage").textContent = "❌ " + data.message;
-        }
-      } catch (err) {
-        document.getElementById("registerMessage").textContent = "Błąd połączenia.";
+        alert("Wystąpił problem z serwerem");
       }
     });
   </script>
