@@ -2,76 +2,104 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>System Rezerwacji — Strona Główna</title>
+  <title>AVON – Asystent Właściciela Obiektów Noclegowych</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: linear-gradient(135deg, #0ea5e9, #1e293b);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+    }
+    header p {
+      font-size: 1.2rem;
+      margin-top: .5rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    section {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    h2 {
+      margin-top: 0;
+      color: #0ea5e9;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 2rem;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #64748b;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <h1>AVON</h1>
+    <p>Asystent Właściciela Obiektów Noclegowych</p>
+    <a href="/login.html" class="btn">Zaloguj się</a>
+    <a href="/register.html" class="btn">Załóż konto</a>
+  </header>
+
   <div class="container">
-    <header>
-      <h1>System Rezerwacji Online</h1>
-      <p>Zarządzaj rezerwacjami apartamentów i płatnościami w prosty sposób.</p>
-    </header>
+    <section>
+      <h2>Dlaczego AVON?</h2>
+      <p><strong>AVON</strong> to nowoczesny system zarządzania apartamentami, pokojami i rezerwacjami.
+      Podstawowe funkcje są <strong>darmowe</strong>, a rozszerzenia Premium możesz włączyć wtedy, kiedy ich potrzebujesz.</p>
+    </section>
 
-    <main>
-      <section class="card">
-        <h2>Dlaczego warto?</h2>
-        <ul>
-          <li>✅ Prosta obsługa dla właścicieli i klientów</li>
-          <li>✅ Automatyczne potwierdzenia rezerwacji</li>
-          <li>✅ Bezpieczne płatności online</li>
-          <li>✅ Statystyki i pełna kontrola nad obiektami</li>
-        </ul>
-      </section>
+    <section>
+      <h2>Co zyskujesz?</h2>
+      <ul>
+        <li>📅 Intuicyjny kalendarz rezerwacji</li>
+        <li>🏡 Dodawanie wielu obiektów i pokoi</li>
+        <li>👥 Zarządzanie pracownikami i zadaniami</li>
+        <li>📊 Statystyki i raporty</li>
+        <li>💳 Obsługę płatności i faktur</li>
+        <li>🌍 Integrację z Booking i Airbnb</li>
+      </ul>
+    </section>
 
-      <section class="card auth">
-        <h2>Zaloguj się</h2>
-        <form id="loginForm">
-          <label>Email:<br>
-            <input type="email" id="email" required />
-          </label><br><br>
-          <label>Hasło:<br>
-            <input type="password" id="password" required />
-          </label><br><br>
-          <button type="submit">Zaloguj</button>
-        </form>
-        <p>
-          <a href="/register.html">Rejestracja</a> |
-          <a href="/forgot-password.html">Zapomniałem hasła</a>
-        </p>
-      </section>
-    </main>
-
-    <footer>
-      © 2025 — System Rezerwacji Online
-    </footer>
+    <section>
+      <h2>Jak zacząć?</h2>
+      <p>To proste! Zarejestruj konto i od razu zacznij korzystać z darmowych funkcji.
+      Jeśli potrzebujesz więcej, włącz Premium w dowolnym momencie.</p>
+      <a href="/register.html" class="btn">Rozpocznij za darmo</a>
+    </section>
   </div>
 
-  <script>
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      try {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          alert("Zalogowano pomyślnie!");
-          // po zalogowaniu przekierowanie do panelu demo
-          window.location.href = "/demo.html";
-        } else {
-          alert("Błąd: " + data.message);
-        }
-      } catch (err) {
-        alert("Wystąpił problem z serwerem");
-      }
-    });
-  </script>
+  <footer>
+    © 2025 AVON – Asystent Właściciela Obiektów Noclegowych
+  </footer>
 </body>
 </html>
