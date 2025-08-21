@@ -4,102 +4,54 @@
   <meta charset="utf-8" />
   <title>AWON – Asystent Właściciela Obiektów Noclegowych</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background: #f8fafc;
-      color: #1e293b;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: linear-gradient(135deg, #0ea5e9, #1e293b);
-      color: white;
-      padding: 2rem;
-      text-align: center;
-    }
-    header h1 {
-      font-size: 2.5rem;
-      margin: 0;
-    }
-    header p {
-      font-size: 1.2rem;
-      margin-top: .5rem;
-    }
-    .container {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-    section {
-      background: white;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 2rem;
-    }
-    h2 {
-      margin-top: 0;
-      color: #0ea5e9;
-    }
-    .btn {
-      display: inline-block;
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 2rem;
-      text-decoration: none;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    .btn:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      transform: translateY(-2px);
-    }
-    footer {
-      text-align: center;
-      padding: 1rem;
-      color: #64748b;
-    }
-  </style>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <h1>AVON</h1>
-    <p>Asystent Właściciela Obiektów Noclegowych</p>
-    <a href="/login.html" class="btn">Zaloguj się</a>
-    <a href="/register.html" class="btn">Załóż konto</a>
+  <!-- Sekcja hero -->
+  <header class="hero">
+    <h1>AWON</h1>
+    <p>Asystent Właściciela Obiektów Noclegowych – zarządzaj rezerwacjami, gośćmi i zadaniami w jednym miejscu.</p>
+    <div class="cta-buttons">
+      <a href="/login.html" class="btn">Zaloguj się</a>
+      <a href="/register.html" class="btn btn-secondary">Zarejestruj się</a>
+    </div>
   </header>
 
-  <div class="container">
+  <main class="container">
+    <!-- O systemie -->
     <section>
-      <h2>Dlaczego AVON?</h2>
-      <p><strong>AVON</strong> to nowoczesny system zarządzania apartamentami, pokojami i rezerwacjami.
-      Podstawowe funkcje są <strong>darmowe</strong>, a rozszerzenia Premium możesz włączyć wtedy, kiedy ich potrzebujesz.</p>
+      <h2>Dlaczego AWON?</h2>
+      <p>
+        AWON to nowoczesny system wspierający właścicieli apartamentów i pensjonatów w zarządzaniu obiektami noclegowymi.
+        Kalendarz, rezerwacje, płatności, baza klientów i faktury – wszystko w jednym miejscu, dostępne online 24/7.
+      </p>
     </section>
 
+    <!-- Funkcje -->
     <section>
-      <h2>Co zyskujesz?</h2>
+      <h2>Najważniejsze funkcje</h2>
       <ul>
         <li>📅 Intuicyjny kalendarz rezerwacji</li>
-        <li>🏡 Dodawanie wielu obiektów i pokoi</li>
-        <li>👥 Zarządzanie pracownikami i zadaniami</li>
-        <li>📊 Statystyki i raporty</li>
-        <li>💳 Obsługę płatności i faktur</li>
-        <li>🌍 Integrację z Booking i Airbnb</li>
+        <li>👥 Zarządzanie gośćmi i pracownikami</li>
+        <li>💳 Obsługa płatności i subskrypcji</li>
+        <li>📊 Raporty i statystyki</li>
+        <li>🧾 Faktury i dokumenty dla księgowości</li>
+        <li>🌐 Integracja z Booking.com i Airbnb</li>
       </ul>
     </section>
 
+    <!-- Informacja o cenach -->
     <section>
-      <h2>Jak zacząć?</h2>
-      <p>To proste! Zarejestruj konto i od razu zacznij korzystać z darmowych funkcji.
-      Jeśli potrzebujesz więcej, włącz Premium w dowolnym momencie.</p>
-      <a href="/register.html" class="btn">Rozpocznij za darmo</a>
+      <h2>Bezpłatny dostęp</h2>
+      <p>
+        Podstawowe funkcje AWON są <strong>całkowicie darmowe</strong>.  
+        Tylko niektóre zaawansowane moduły (np. faktury, raporty podatkowe) dostępne są w wersji Premium.
+      </p>
     </section>
-  </div>
+  </main>
 
   <footer>
-    © 2025 AVON – Asystent Właściciela Obiektów Noclegowych
+    © 2025 AWON – Asystent Właściciela Obiektów Noclegowych
   </footer>
 </body>
 </html>
