@@ -2,15 +2,35 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>System Rezerwacji — Test</title>
+  <title>System Rezerwacji — Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <h1>✅ Działa frontend na Vercel!</h1>
-  <p>Jeśli to widzisz, to znaczy, że <code>index.html</code> został poprawnie załadowany z <code>/public</code>.</p>
+  <div class="container">
+    <h1>System Rezerwacji — Demo (Vercel + Supabase)</h1>
 
-  <p>
-    <a href="/api/health" target="_blank">🔗 Sprawdź API (/api/health)</a>
-  </p>
+    <!-- Lista obiektów -->
+    <section class="card">
+      <h2>Dostępne obiekty</h2>
+      <ul id="properties"></ul>
+    </section>
+
+    <!-- Lista pokoi -->
+    <section class="card">
+      <h2>Dostępne pokoje</h2>
+      <ul id="rooms"></ul>
+    </section>
+
+    <!-- Lista rezerwacji -->
+    <section class="card">
+      <h2>Rezerwacje</h2>
+      <ul id="bookings"></ul>
+    </section>
+
+    <footer>© 2025 — MVP do dalszej rozbudowy</footer>
+  </div>
+
+  <script src="/app.js"></script>
 </body>
 </html>
