@@ -66,3 +66,11 @@ app.get("*", (req, res) => {
 });
 
 export default app;
+// ✅ Debug Supabase
+app.get("/api/debug-supabase", (req, res) => {
+  res.json({
+    url: process.env.SUPABASE_URL ? "OK" : "NOT FOUND",
+    anonKey: process.env.SUPABASE_KEY ? "OK" : "NOT FOUND",
+    serviceRole: process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "NOT FOUND"
+  });
+});
