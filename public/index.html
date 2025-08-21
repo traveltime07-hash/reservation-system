@@ -2,55 +2,99 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>System Zarządzania Rezerwacjami</title>
+  <title>System Rezerwacji — Logowanie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header class="hero">
-    <div class="container">
-      <h1>System Zarządzania Rezerwacjami</h1>
-      <p>Prosty i wygodny panel online dla właścicieli apartamentów, hoteli i pensjonatów.</p>
-      <div class="cta-buttons">
-        <a href="/login.html" class="btn">Zaloguj się</a>
-        <a href="/register.html" class="btn btn-secondary">Zarejestruj się</a>
-      </div>
-    </div>
-  </header>
+  <div class="container">
+    <h1>System Rezerwacji</h1>
+    <p>Zaloguj się lub zarejestruj, aby zarządzać swoimi obiektami i rezerwacjami.</p>
 
-  <main class="container">
-    <section>
-      <h2>O systemie</h2>
-      <p>
-        Nasz system nie jest portalem rezerwacyjnym dla klientów końcowych.  
-        To profesjonalne narzędzie do <strong>zarządzania istniejącymi rezerwacjami</strong> 
-        w Twoich obiektach.
-      </p>
+    <!-- Formularz logowania -->
+    <section class="card">
+      <h2>Logowanie</h2>
+      <form id="loginForm">
+        <label>Email:
+          <input type="email" id="loginEmail" required />
+        </label>
+        <label>Hasło:
+          <input type="password" id="loginPassword" required />
+        </label>
+        <button type="submit">Zaloguj</button>
+      </form>
+      <div id="loginMessage"></div>
     </section>
 
-    <section>
-      <h2>Najważniejsze funkcje</h2>
-      <ul>
-        <li>Zarządzanie obiektami i pokojami</li>
-        <li>Podgląd rezerwacji i płatności</li>
-        <li>Dodawanie i edytowanie rezerwacji</li>
-        <li>Statystyki i raporty</li>
-        <li>Udostępnianie panelu innym osobom</li>
-        <li>Subskrypcja z darmowym okresem próbnym</li>
-      </ul>
+    <!-- Formularz rejestracji -->
+    <section class="card">
+      <h2>Rejestracja</h2>
+      <form id="registerForm">
+        <label>Email:
+          <input type="email" id="registerEmail" required />
+        </label>
+        <label>Hasło:
+          <input type="password" id="registerPassword" required />
+        </label>
+        <button type="submit">Zarejestruj</button>
+      </form>
+      <div id="registerMessage"></div>
     </section>
 
-    <section>
-      <h2>Dla kogo?</h2>
-      <p>
-        System został stworzony z myślą o właścicielach apartamentów, pensjonatów i hoteli, 
-        którzy chcą mieć wszystkie swoje rezerwacje w jednym miejscu.
-      </p>
-    </section>
-  </main>
+    <footer>© 2025 — System Rezerwacji</footer>
+  </div>
 
-  <footer>
-    © 2025 — System Zarządzania Rezerwacjami. Wersja MVP do dalszej rozbudowy.
-  </footer>
+  <script>
+    const apiBase = "/api/auth";
+
+    // Logowanie
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const res = await fetch(apiBase + "/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("token", data.token);
+          document.getElementById("loginMessage").textContent = "✅ Zalogowano!";
+          // przekierowanie do panelu
+          window.location.href = "/panel.html";
+        } else {
+          document.getElementById("loginMessage").textContent = "❌ " + data.message;
+        }
+      } catch (err) {
+        document.getElementById("loginMessage").textContent = "Błąd połączenia.";
+      }
+    });
+
+    // Rejestracja
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("registerEmail").value;
+      const password = document.getElementById("registerPassword").value;
+
+      try {
+        const res = await fetch(apiBase + "/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("registerMessage").textContent = "✅ Konto utworzone!";
+        } else {
+          document.getElementById("registerMessage").textContent = "❌ " + data.message;
+        }
+      } catch (err) {
+        document.getElementById("registerMessage").textContent = "Błąd połączenia.";
+      }
+    });
+  </script>
 </body>
 </html>
