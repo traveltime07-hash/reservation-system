@@ -1,1 +1,78 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Panel użytkownika — System Rezerwacji</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Panel użytkownika</h1>
+      <button id="logoutBtn">🚪 Wyloguj</button>
+    </header>
 
+    <section class="card">
+      <h2>Moje konto</h2>
+      <div id="userInfo">Ładowanie danych...</div>
+    </section>
+
+    <section class="card">
+      <h2>Moje obiekty</h2>
+      <ul id="properties"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Pokoje</h2>
+      <ul id="rooms"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Rezerwacje</h2>
+      <ul id="bookings"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Płatności</h2>
+      <ul id="payments"></ul>
+    </section>
+
+    <footer>© 2025 — System Rezerwacji</footer>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Brak tokena → wróć do logowania
+      window.location.href = "/";
+    }
+
+    // Wylogowanie
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    });
+
+    // Pobranie danych o użytkowniku
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/auth/me", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("userInfo").textContent =
+            `👤 Zalogowany jako: ${data.email}`;
+        } else {
+          document.getElementById("userInfo").textContent = "Błąd: " + data.message;
+        }
+      } catch (err) {
+        document.getElementById("userInfo").textContent = "Błąd połączenia z API";
+      }
+    }
+
+    fetchUser();
+  </script>
+</body>
+</html>
