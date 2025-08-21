@@ -31,17 +31,6 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// routers
-app.use('/api/auth', authRouter);
-app.use('/api', propertiesRouter);
-app.use('/api', roomsRouter);
-app.use('/api', bookingsRouter);
-app.use('/api/payments', paymentsRouter);
-
-// static
-app.use(express.static(path.join(__dirname, '../public')));
-
-export default app;
 // debug-env
 app.get('/api/debug-env', (req, res) => {
   res.json({
@@ -49,3 +38,12 @@ app.get('/api/debug-env', (req, res) => {
     raw: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + "..." : null
   });
 });
+
+// routers
+app.use('/api/auth', authRouter);
+app.use('/api', propertiesRouter);
+app.use('/api', roomsRouter);
+app.use('/api', bookingsRouter);
+app.use('/api/payments', paymentsRouter);
+
+// s
