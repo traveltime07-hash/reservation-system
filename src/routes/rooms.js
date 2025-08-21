@@ -1,30 +1,26 @@
-import { Router } from "express";
-import { pool } from "../db.js";
+import express from 'express';
+import { pool } from '../db.js';
 
-const router = Router();
+const router = express.Router();
 
-// pobierz wszystkie pokoje
-router.get("/rooms", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM rooms ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// lista pokoi dla obiektu
+router.get('/properties/:id/rooms', async (req, res) => {
+  const result = await pool.query(
+    'SELECT * FROM rooms WHERE property_id = $1',
+    [req.params.id]
+  );
+  res.json(result.rows);
 });
 
-// dodaj pokój
-router.post("/rooms", async (req, res) => {
-  const { property_id, name, capacity, price } = req.body;
-  try {
-    const result = await pool.query(
-      "INSERT INTO rooms (property_id, name, capacity, price) VALUES ($1, $2, $3, $4) RETURNING *",
-      [property_id, name, capacity, price]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// dodanie pokoju
+router.post('/properties/:id/rooms', async (req, res) => {
+  const { name, capacity } = req.body;
+  const result = await pool.query(
+    `INSERT INTO rooms (property_id, name, capacity) 
+     VALUES ($1, $2, $3) RETURNING *`,
+    [req.params.id, name, capacity]
+  );
+  res.json(result.rows[0]);
 });
 
 export default router;
