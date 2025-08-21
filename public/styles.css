@@ -5,69 +5,90 @@
   box-sizing: border-box;
 }
 
-/* Globalne */
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f6f9;
-  color: #333;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
+  color: #333;
+  background: #f9f9f9;
+}
+
+/* Layout */
+.container {
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Hero section */
+.hero {
+  background: linear-gradient(135deg, #0070f3, #00c6ff);
+  color: #fff;
+  padding: 60px 20px;
+  text-align: center;
+  border-bottom: 4px solid #005bb5;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 25px;
+}
+
+.cta-buttons {
   display: flex;
   justify-content: center;
-  padding: 20px;
+  gap: 15px;
 }
 
-.container {
-  width: 100%;
-  max-width: 1000px;
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #fff;
+  color: #0070f3;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
 }
 
-/* Nagłówki */
-h1 {
-  font-size: 2rem;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #2c3e50;
+.btn:hover {
+  background: #0070f3;
+  color: #fff;
 }
 
-h2 {
-  font-size: 1.4rem;
-  margin-bottom: 10px;
-  color: #34495e;
-  border-left: 4px solid #3498db;
-  padding-left: 8px;
+.btn-secondary {
+  background: #333;
+  color: #fff;
 }
 
-/* Sekcje (karty) */
-.card {
+.btn-secondary:hover {
+  background: #555;
+}
+
+/* Sections */
+main section {
   background: #fff;
   padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-/* Listy */
-ul {
-  list-style: none;
-  margin-top: 10px;
-}
-
-ul li {
-  background: #ecf0f1;
-  padding: 10px;
+  margin: 20px 0;
   border-radius: 8px;
-  margin-bottom: 8px;
-  transition: background 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-ul li:hover {
-  background: #dfe6e9;
+main h2 {
+  margin-bottom: 15px;
+  color: #0070f3;
 }
 
 /* Footer */
 footer {
   text-align: center;
-  padding: 15px;
+  padding: 20px;
   font-size: 0.9rem;
-  color: #777;
-}
+  background: #eee;
+  color
