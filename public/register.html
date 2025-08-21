@@ -5,80 +5,11 @@
   <title>AWON – Rejestracja</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1e293b, #0ea5e9);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-    }
-    .card {
-      background: #ffffff;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      max-width: 450px;
-      width: 100%;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 1rem;
-      color: #1e293b;
-    }
-    p {
-      margin-bottom: 1.5rem;
-      color: #475569;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      border-radius: 0.5rem;
-      border: 1px solid #cbd5e1;
-      font-size: 1rem;
-    }
-    input:focus {
-      outline: none;
-      border-color: #0ea5e9;
-      box-shadow: 0 0 0 2px rgba(14,165,233,0.3);
-    }
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color: white;
-      font-size: 1.1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      margin-top: 1rem;
-    }
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(14,165,233,0.3);
-    }
-    .links {
-      margin-top: 1rem;
-    }
-    .links a {
-      color: #0ea5e9;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .links a:hover {
-      text-decoration: underline;
-    }
-  </style>
 </head>
 <body>
   <div class="card">
-    <h1>AVON</h1>
-    <p>Utwórz konto, aby rozpocząć zarządzanie swoimi obiektami</p>
+    <h1>AWON</h1>
+    <p>Utwórz nowe konto</p>
     <form action="/api/auth/register" method="POST">
       <input type="text" name="name" placeholder="Imię i nazwisko" required />
       <input type="email" name="email" placeholder="Adres e-mail" required />
@@ -92,4 +23,3 @@
   </div>
 </body>
 </html>
-
