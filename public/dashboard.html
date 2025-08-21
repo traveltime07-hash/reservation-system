@@ -2,57 +2,42 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>AWON – Panel główny</title>
+  <title>AWON – Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <!-- Pasek górny -->
-  <header class="hero">
-    <h1>Witaj w AWON 🎉</h1>
-    <p>Asystent Właściciela Obiektów Noclegowych</p>
-    <div class="cta-buttons">
-      <a href="/logout" class="btn-secondary">Wyloguj</a>
-    </div>
-  </header>
-
   <div class="container">
-    <!-- Szybki podgląd -->
-    <section class="card">
-      <h2>Twoje statystyki</h2>
-      <div class="stats">
-        <div class="stat-box">
-          <h3>Obiekty</h3>
-          <p id="stats-properties">2</p>
-        </div>
-        <div class="stat-box">
-          <h3>Rezerwacje</h3>
-          <p id="stats-bookings">14</p>
-        </div>
-        <div class="stat-box">
-          <h3>Zadania na dziś</h3>
-          <p id="stats-tasks">3</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Nawigacja główna -->
-    <section class="card">
-      <h2>Menu</h2>
-      <div class="menu-buttons">
-        <a href="/properties.html" class="btn">🏠 Moje obiekty</a>
-        <a href="/calendar.html" class="btn">📅 Kalendarz</a>
-        <a href="/bookings.html" class="btn">📝 Rezerwacje</a>
-        <a href="/clients.html" class="btn">👥 Klienci</a>
-        <a href="/tasks.html" class="btn">✅ Zadania</a>
-        <a href="/invoices.html" class="btn">💰 Faktury</a>
-        <a href="/settings.html" class="btn-secondary">⚙️ Ustawienia</a>
-      </div>
-    </section>
+    <h1>Witaj w AWON!</h1>
+    <p id="userEmail"></p>
+    <button onclick="logout()">Wyloguj się</button>
   </div>
 
-  <footer>
-    © 2025 AWON – Asystent Właściciela Obiektów Noclegowych
-  </footer>
+  <script>
+    async function loadUser() {
+      const token = localStorage.getItem("token");
+      if (!token) return window.location.href = "/login.html";
+
+      const res = await fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("userEmail").innerText =
+          "Zalogowany jako: " + data.user.email;
+      } else {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/login.html";
+    }
+
+    loadUser();
+  </script>
 </body>
 </html>
