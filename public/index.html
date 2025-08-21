@@ -1,41 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>System Rezerwacji — Demo</title>
+  <title>System Rezerwacji — Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #333; }
+    .card {
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #f9f9f9;
+      max-width: 500px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      text-decoration: none;
+      color: white;
+      background: #0070f3;
+      padding: 10px 15px;
+      border-radius: 5px;
+    }
+    a:hover { background: #0059c1; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>System Rezerwacji — Demo (Vercel + Supabase)</h1>
-    <section class="card">
-      <h2>Wyszukaj obiekt i pokój</h2>
-      <div class="row">
-        <label>Obiekt:
-          <select id="property"></select>
-        </label>
-        <label>Pokój:
-          <select id="room"></select>
-        </label>
-      </div>
-      <div class="row">
-        <label>Od: <input type="date" id="from" /></label>
-        <label>Do: <input type="date" id="to" /></label>
-      </div>
-      <button id="check">Sprawdź dostępność</button>
-      <div id="availability"></div>
-      <hr/>
-      <h3>Rezerwacja</h3>
-      <div class="row">
-        <label>Imię i nazwisko: <input type="text" id="name" placeholder="Jan Kowalski"/></label>
-        <label>Email: <input type="email" id="email" placeholder="jan@example.com"/></label>
-      </div>
-      <button id="book" disabled>Zarezerwuj</button>
-      <div id="booking"></div>
-    </section>
-    <footer>© 2025 — MVP do dalszej rozbudowy</footer>
+  <h1>System Rezerwacji — Test</h1>
+  <div class="card">
+    <p>Jeśli widzisz tę stronę, to frontend działa 🎉</p>
+    <p>Teraz sprawdź API:</p>
+    <a href="/api/health">Testuj /api/health</a>
   </div>
-  <script src="/app.js"></script>
 </body>
 </html>
