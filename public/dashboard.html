@@ -1,86 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AWON – Panel właściciela</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <title>AWON – Panel</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <div class="hero">
-      <h1>Witaj w AWON!</h1>
-      <p>Zarządzaj swoimi obiektami noclegowymi w jednym miejscu</p>
-      <a href="/add-property.html" class="btn">+ Dodaj nowy obiekt</a>
-      <a href="/login.html" onclick="logout()" class="btn-secondary">Wyloguj się</a>
-    </div>
+    <h1>Witaj w AWON!</h1>
+    <button onclick="logout()">Wyloguj się</button>
 
-    <main>
-      <section>
-        <h2>Twoje obiekty</h2>
-        <div id="propertiesList" class="menu-buttons">
-          <p>Ładowanie danych...</p>
-        </div>
-      </section>
-    </main>
+    <h2>Moje obiekty</h2>
+    <div id="properties-list"></div>
+
+    <a href="add-property.html">
+      <button>Dodaj nowy obiekt</button>
+    </a>
   </div>
 
   <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Musisz się zalogować!");
-      window.location.href = "/login.html";
-    }
+    async function fetchProperties() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
 
-    async function loadProperties() {
       const res = await fetch("/api/properties", {
-        headers: { "Authorization": "Bearer " + token }
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (!res.ok) {
-        document.getElementById("propertiesList").innerHTML = "<p>Błąd wczytywania obiektów</p>";
-        return;
-      }
-
       const properties = await res.json();
+
+      const list = document.getElementById("properties-list");
+      list.innerHTML = "";
+
       if (properties.length === 0) {
-        document.getElementById("propertiesList").innerHTML = "<p>Nie masz jeszcze obiektów. Dodaj pierwszy!</p>";
+        list.innerHTML = "<p>Nie masz jeszcze żadnych obiektów.</p>";
         return;
       }
 
-      document.getElementById("propertiesList").innerHTML = properties.map(p => `
-        <div class="stat-box">
+      properties.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "property";
+        div.innerHTML = `
           <h3>${p.name}</h3>
-          <p>${p.address || "Brak adresu"}</p>
-          <div style="margin-top:10px;">
-            <a href="/edit-property.html?id=${p.id}" class="btn">Edytuj</a>
-            <button onclick="deleteProperty(${p.id})" class="btn-secondary">Usuń</button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    async function deleteProperty(id) {
-      if (!confirm("Na pewno chcesz usunąć ten obiekt?")) return;
-
-      const res = await fetch(`/api/properties/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": "Bearer " + token }
+          <p>${p.address}</p>
+          <p>${p.description || ""}</p>
+          <button onclick="editProperty(${p.id})">Edytuj</button>
+          <button onclick="deleteProperty(${p.id})">Usuń</button>
+        `;
+        list.appendChild(div);
       });
-
-      if (res.ok) {
-        alert("Obiekt usunięty");
-        loadProperties();
-      } else {
-        alert("Błąd usuwania obiektu");
-      }
     }
 
     function logout() {
       localStorage.removeItem("token");
+      window.location.href = "login.html";
     }
 
-    loadProperties();
+    function editProperty(id) {
+      window.location.href = "edit-property.html?id=" + id;
+    }
+
+    async function deleteProperty(id) {
+      const token = localStorage.getItem("token");
+      if (!confirm("Na pewno chcesz usunąć ten obiekt?")) return;
+
+      await fetch(`/api/properties/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProperties();
+    }
+
+    fetchProperties();
   </script>
 </body>
 </html>
