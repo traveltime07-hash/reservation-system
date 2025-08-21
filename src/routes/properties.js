@@ -1,30 +1,23 @@
-import { Router } from "express";
-import { pool } from "../db.js";
+import express from 'express';
+import { pool } from '../db.js';
 
-const router = Router();
+const router = express.Router();
 
-// pobierz wszystkie obiekty
-router.get("/properties", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM properties ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// lista obiektów
+router.get('/properties', async (req, res) => {
+  const result = await pool.query('SELECT * FROM properties ORDER BY created_at DESC');
+  res.json(result.rows);
 });
 
-// dodaj obiekt
-router.post("/properties", async (req, res) => {
-  const { name, address } = req.body;
-  try {
-    const result = await pool.query(
-      "INSERT INTO properties (name, address) VALUES ($1, $2) RETURNING *",
-      [name, address]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// dodawanie obiektu
+router.post('/properties', async (req, res) => {
+  const { user_id, name, city } = req.body;
+  const result = await pool.query(
+    `INSERT INTO properties (user_id, name, city) 
+     VALUES ($1, $2, $3) RETURNING *`,
+    [user_id, name, city]
+  );
+  res.json(result.rows[0]);
 });
 
 export default router;
