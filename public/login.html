@@ -4,21 +4,46 @@
   <meta charset="utf-8" />
   <title>AWON – Logowanie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff; display: flex; justify-content: center; align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: #fff; color: #333; padding: 2rem; border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      width: 100%; max-width: 400px; text-align: center;
+    }
+    h1 { color: #6a11cb; margin-bottom: 1rem; }
+    input {
+      width: 100%; padding: 0.75rem; margin: 0.5rem 0;
+      border: 1px solid #ccc; border-radius: 0.5rem; font-size: 1rem;
+    }
+    button {
+      background: #2575fc; color: #fff; border: none;
+      padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-size: 1rem;
+      cursor: pointer; transition: 0.3s;
+    }
+    button:hover { background: #6a11cb; }
+    a {
+      display: block; margin-top: 1rem; color: #2575fc; text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
   <div class="card">
     <h1>AWON</h1>
-    <p>Zaloguj się do swojego konta</p>
-    <form action="/api/auth/login" method="POST">
-      <input type="email" name="email" placeholder="Adres e-mail" required />
-      <input type="password" name="password" placeholder="Hasło" required />
+    <h2>Logowanie</h2>
+    <form>
+      <input type="email" placeholder="Email" required />
+      <input type="password" placeholder="Hasło" required />
       <button type="submit">Zaloguj się</button>
     </form>
-    <div class="links">
-      <a href="/register.html">Nie masz konta? Zarejestruj się</a><br/>
-      <a href="/forgot-password.html">Zapomniałeś hasła?</a>
-    </div>
+    <a href="register.html">Nie masz konta? Zarejestruj się</a>
+    <a href="forgot-password.html">Zapomniałeś hasła?</a>
   </div>
 </body>
 </html>
