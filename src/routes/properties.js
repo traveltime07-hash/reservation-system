@@ -5,16 +5,6 @@ import jwt from "jsonwebtoken";
 const router = express.Router();
 
 // Middleware sprawdzający token
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(401);import express from "express";
-import { pool } from "../db.js";
-import jwt from "jsonwebtoken";
-
-const router = express.Router();
-
-// Middleware do sprawdzania tokena
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Brak tokena" });
@@ -32,9 +22,7 @@ function authMiddleware(req, res, next) {
 router.post("/properties", authMiddleware, async (req, res) => {
   const { name, description, address } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ error: "Nazwa obiektu jest wymagana" });
-  }
+  if (!name) return res.status(400).json({ error: "Nazwa obiektu jest wymagana" });
 
   try {
     const result = await pool.query(
@@ -51,7 +39,7 @@ router.post("/properties", authMiddleware, async (req, res) => {
 router.get("/properties", authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM properties WHERE user_id = $1",
+      "SELECT * FROM properties WHERE user_id = $1 ORDER BY created_at DESC",
       [req.user.id]
     );
     res.json(result.rows);
@@ -60,43 +48,36 @@ router.get("/properties", authMiddleware, async (req, res) => {
   }
 });
 
-export default router;
+// Edycja obiektu
+router.put("/properties/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { name, description, address } = req.body;
 
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-}
-
-// ➕ Dodawanie obiektu
-router.post("/properties", authenticateToken, async (req, res) => {
   try {
-    const { name, address, description } = req.body;
     const result = await pool.query(
-      `INSERT INTO properties (owner_id, name, address, description) 
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.user.id, name, address, description]
+      "UPDATE properties SET name=$1, description=$2, address=$3 WHERE id=$4 AND user_id=$5 RETURNING *",
+      [name, description, address, id, req.user.id]
     );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Obiekt nie znaleziony" });
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Błąd serwera" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 📋 Pobieranie obiektów zalogowanego użytkownika
-router.get("/properties", authenticateToken, async (req, res) => {
+// Usuwanie obiektu
+router.delete("/properties/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+
   try {
     const result = await pool.query(
-      `SELECT * FROM properties WHERE owner_id = $1 ORDER BY created_at DESC`,
-      [req.user.id]
+      "DELETE FROM properties WHERE id=$1 AND user_id=$2 RETURNING *",
+      [id, req.user.id]
     );
-    res.json(result.rows);
+    if (result.rows.length === 0) return res.status(404).json({ error: "Obiekt nie znaleziony" });
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Błąd serwera" });
+    res.status(500).json({ error: err.message });
   }
 });
 
