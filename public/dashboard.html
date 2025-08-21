@@ -41,3 +41,58 @@
   </script>
 </body>
 </html>
+<section>
+  <h2>Moje obiekty</h2>
+  <form id="property-form">
+    <input type="text" id="property-name" placeholder="Nazwa obiektu" required />
+    <input type="text" id="property-address" placeholder="Adres" />
+    <textarea id="property-description" placeholder="Opis"></textarea>
+    <button type="submit">Dodaj obiekt</button>
+  </form>
+
+  <div id="properties-list"></div>
+</section>
+
+<script>
+  const token = localStorage.getItem("token");
+
+  // Obsługa formularza
+  document.getElementById("property-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("property-name").value;
+    const address = document.getElementById("property-address").value;
+    const description = document.getElementById("property-description").value;
+
+    const res = await fetch("/api/properties", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ name, address, description })
+    });
+
+    const data = await res.json();
+    alert("Dodano obiekt: " + data.name);
+    loadProperties();
+  });
+
+  // Pobieranie listy obiektów
+  async function loadProperties() {
+    const res = await fetch("/api/properties", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const properties = await res.json();
+
+    const list = document.getElementById("properties-list");
+    list.innerHTML = properties.map(p => `
+      <div class="property-card">
+        <h3>${p.name}</h3>
+        <p>${p.address || ""}</p>
+        <p>${p.description || ""}</p>
+      </div>
+    `).join("");
+  }
+
+  loadProperties();
+</script>
