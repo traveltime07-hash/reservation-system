@@ -9,6 +9,7 @@ import propertiesRouter from "./routes/properties.js";
 import roomsRouter from "./routes/rooms.js";
 import bookingsRouter from "./routes/bookings.js";
 import paymentsRouter from "./routes/payments.js";
+import { supabase } from "./supabase.js";
 
 dotenv.config();
 
@@ -57,6 +58,22 @@ app.get("/api/debug-secret", (req, res) => {
   });
 });
 
+// ✅ Debug Supabase
+app.get("/api/debug-supabase", async (req, res) => {
+  try {
+    const { data, error } = await supabase.from("images").select("*").limit(1);
+    if (error) throw error;
+    res.json({
+      url: process.env.SUPABASE_URL ? "OK" : "NOT FOUND",
+      anonKey: process.env.SUPABASE_KEY ? "OK" : "NOT FOUND",
+      serviceRole: process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "NOT FOUND",
+      testData: data
+    });
+  } catch (err) {
+    res.status(500).json({ status: "ERROR", message: err.message });
+  }
+});
+
 // ✅ Serwujemy pliki z folderu public
 app.use(express.static(path.join(__dirname, "../public")));
 
@@ -66,11 +83,3 @@ app.get("*", (req, res) => {
 });
 
 export default app;
-// ✅ Debug Supabase
-app.get("/api/debug-supabase", (req, res) => {
-  res.json({
-    url: process.env.SUPABASE_URL ? "OK" : "NOT FOUND",
-    anonKey: process.env.SUPABASE_KEY ? "OK" : "NOT FOUND",
-    serviceRole: process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "NOT FOUND"
-  });
-});
