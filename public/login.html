@@ -10,13 +10,35 @@
   <div class="form-card">
     <h1>AWON</h1>
     <h2>Logowanie</h2>
-    <form>
-      <input type="email" placeholder="Adres e-mail" required />
-      <input type="password" placeholder="Hasło" required />
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Adres e-mail" required />
+      <input type="password" id="password" placeholder="Hasło" required />
       <button type="submit">Zaloguj się</button>
     </form>
     <a href="/register.html">Nie masz konta? Zarejestruj się</a>
     <a href="/forgot-password.html">Zapomniałeś hasła?</a>
   </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        window.location.href = "/dashboard.html";
+      } else {
+        alert(data.message);
+      }
+    });
+  </script>
 </body>
 </html>
