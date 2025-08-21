@@ -1,62 +1,71 @@
-<main class="container">
-  <h2>Twoje obiekty</h2>
-  <div id="propertiesList" class="stats"></div>
-  <a href="/add-property.html" class="btn">+ Dodaj nowy obiekt</a>
-</main>
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>AWON – Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>Witaj w AWON!</h1>
+    <button id="logoutBtn" class="btn-secondary">Wyloguj się</button>
+  </header>
 
-<script>
-async function loadProperties() {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    document.getElementById("propertiesList").innerHTML = "<p>Musisz się zalogować</p>";
-    return;
-  }
+  <main class="container">
+    <section>
+      <h2>Twoje obiekty noclegowe</h2>
+      <div id="propertiesList"></div>
+      <a href="/add-property.html" class="btn">+ Dodaj nowy obiekt</a>
+    </section>
+  </main>
 
-  const res = await fetch("/api/properties", {
-    headers: { "Authorization": "Bearer " + token }
-  });
-  const data = await res.json();
+  <script>
+    async function loadProperties() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Musisz się zalogować!");
+        window.location.href = "/login.html";
+        return;
+      }
 
-  const list = document.getElementById("propertiesList");
-  list.innerHTML = "";
+      const res = await fetch("/api/properties", {
+        headers: { "Authorization": "Bearer " + token }
+      });
 
-  if (data.length === 0) {
-    list.innerHTML = "<p>Nie masz jeszcze żadnych obiektów.</p>";
-    return;
-  }
+      if (!res.ok) {
+        alert("Błąd pobierania obiektów");
+        return;
+      }
 
-  data.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "stat-box";
-    div.innerHTML = `
-      <h3>${p.name}</h3>
-      <p>${p.address || "Brak adresu"}</p>
-      <small>${p.description || ""}</small>
-      <div style="margin-top:10px;">
-        <button onclick="deleteProperty(${p.id})" class="btn-secondary">Usuń</button>
-      </div>
-    `;
-    list.appendChild(div);
-  });
-}
+      const properties = await res.json();
+      const listDiv = document.getElementById("propertiesList");
+      listDiv.innerHTML = "";
 
-async function deleteProperty(id) {
-  const token = localStorage.getItem("token");
-  if (!confirm("Na pewno usunąć obiekt?")) return;
+      if (properties.length === 0) {
+        listDiv.innerHTML = "<p>Nie masz jeszcze żadnych obiektów.</p>";
+        return;
+      }
 
-  const res = await fetch("/api/properties/" + id, {
-    method: "DELETE",
-    headers: { "Authorization": "Bearer " + token }
-  });
+      properties.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "form-card";
+        div.innerHTML = `
+          <h3>${p.name}</h3>
+          <p>${p.address || "Brak adresu"}</p>
+          <p>${p.description || ""}</p>
+          <a href="/edit-property.html?id=${p.id}" class="btn">Edytuj</a>
+        `;
+        listDiv.appendChild(div);
+      });
+    }
 
-  if (res.ok) {
-    alert("Obiekt usunięty");
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "/login.html";
+    });
+
     loadProperties();
-  } else {
-    const data = await res.json();
-    alert("Błąd: " + data.error);
-  }
-}
-
-loadProperties();
-</script>
+  </script>
+</body>
+</html>
