@@ -33,6 +33,13 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+// ✅ API routers
+app.use("/api/auth", authRouter);
+app.use("/api", propertiesRouter);
+app.use("/api", roomsRouter);
+app.use("/api", bookingsRouter);
+app.use("/api/payments", paymentsRouter);
+
 // ✅ Debug env
 app.get("/api/debug-env", (req, res) => {
   res.json({
@@ -55,16 +62,9 @@ app.get("/api/debug-supabase", (req, res) => {
   res.json({
     url: process.env.SUPABASE_URL ? "OK" : "NOT FOUND",
     anonKey: process.env.SUPABASE_KEY ? "OK" : "NOT FOUND",
-    serviceRole: process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "NOT FOUND",
+    serviceRole: process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "NOT FOUND"
   });
 });
-
-// ✅ API routers
-app.use("/api/auth", authRouter);
-app.use("/api", propertiesRouter);
-app.use("/api", roomsRouter);
-app.use("/api", bookingsRouter);
-app.use("/api/payments", paymentsRouter);
 
 // ✅ Serwujemy pliki z folderu public
 app.use(express.static(path.join(__dirname, "../public")));
