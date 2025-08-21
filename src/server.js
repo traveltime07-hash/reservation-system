@@ -13,9 +13,11 @@ import paymentsRouter from "./routes/payments.js";
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:8080'],
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:8080"],
+  })
+);
 app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,14 +40,6 @@ app.use("/api", roomsRouter);
 app.use("/api", bookingsRouter);
 app.use("/api/payments", paymentsRouter);
 
-// ✅ Serwujemy pliki z folderu public
-app.use(express.static(path.join(__dirname, "../public")));
-
-// ✅ Fix 404 – catch-all na frontend
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-
 // ✅ Debug env
 app.get("/api/debug-env", (req, res) => {
   res.json({
@@ -56,10 +50,19 @@ app.get("/api/debug-env", (req, res) => {
   });
 });
 
-export default app;
-// test JWT_SECRET
-app.get('/api/debug-secret', (req, res) => {
+// ✅ Debug JWT_SECRET
+app.get("/api/debug-secret", (req, res) => {
   res.json({
-    jwt: process.env.JWT_SECRET ? "OK - JWT_SECRET found" : "NOT FOUND"
+    jwt: process.env.JWT_SECRET ? "OK - JWT_SECRET found" : "NOT FOUND",
   });
 });
+
+// ✅ Serwujemy pliki z folderu public
+app.use(express.static(path.join(__dirname, "../public")));
+
+// ✅ Fix 404 – catch-all na frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
+
+export default app;
