@@ -5,91 +5,20 @@
   <title>AWON – Logowanie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1e293b, #0ea5e9);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-    }
-    .card {
-      background: #ffffff;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 1rem;
-      color: #1e293b;
-    }
-    p {
-      margin-bottom: 2rem;
-      color: #475569;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      border-radius: 0.5rem;
-      border: 1px solid #cbd5e1;
-      font-size: 1rem;
-    }
-    input:focus {
-      outline: none;
-      border-color: #0ea5e9;
-      box-shadow: 0 0 0 2px rgba(14,165,233,0.3);
-    }
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color: white;
-      font-size: 1.1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(14,165,233,0.3);
-    }
-    .links {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: space-between;
-    }
-    .links a {
-      color: #0ea5e9;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .links a:hover {
-      text-decoration: underline;
-    }
-  </style>
 </head>
 <body>
   <div class="card">
-    <h1>AVON</h1>
-    <p>Zaloguj się, aby zarządzać swoimi obiektami</p>
+    <h1>AWON</h1>
+    <p>Zaloguj się do swojego konta</p>
     <form action="/api/auth/login" method="POST">
       <input type="email" name="email" placeholder="Adres e-mail" required />
       <input type="password" name="password" placeholder="Hasło" required />
       <button type="submit">Zaloguj się</button>
     </form>
     <div class="links">
-      <a href="/register.html">Rejestracja</a>
-      <a href="/forgot-password.html">Nie pamiętam hasła</a>
+      <a href="/register.html">Nie masz konta? Zarejestruj się</a><br/>
+      <a href="/forgot-password.html">Zapomniałeś hasła?</a>
     </div>
   </div>
 </body>
 </html>
-
