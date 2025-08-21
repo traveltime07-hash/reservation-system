@@ -20,8 +20,8 @@ async function fetchData(endpoint, elementId, formatter) {
   }
 }
 
-// Formatery – ładne wyświetlanie
+// --- Wywołania API z prostym formatowaniem ---
 fetchData("properties", "properties", (item) => `${item.name} (${item.city})`);
-fetchData("rooms", "rooms", (item) => `Pokój: ${item.name}`);
+fetchData("rooms", "rooms", (item) => `Pokój: ${item.name || item.id}`);
 fetchData("bookings", "bookings", (item) => `Rezerwacja ID: ${item.id} od ${item.from_date} do ${item.to_date}`);
-fetchData("payments", "payments", (item) => `Płatność: ${item.amount} (${item.status})`);
+fetchData("payments", "payments", (item) => `Płatność: ${item.amount || "?"} (${item.status || "brak statusu"})`);
