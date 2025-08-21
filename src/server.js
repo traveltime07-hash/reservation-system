@@ -57,7 +57,7 @@ app.get("/api/debug-secret", (req, res) => {
   });
 });
 
-// ✅ Debug Supabase (MUSI być przed catch-all!)
+// ✅ Debug Supabase
 app.get("/api/debug-supabase", (req, res) => {
   res.json({
     url: process.env.SUPABASE_URL ? "OK" : "NOT FOUND",
