@@ -57,3 +57,9 @@ app.get("/api/debug-env", (req, res) => {
 });
 
 export default app;
+// test JWT_SECRET
+app.get('/api/debug-secret', (req, res) => {
+  res.json({
+    jwt: process.env.JWT_SECRET ? "OK - JWT_SECRET found" : "NOT FOUND"
+  });
+});
