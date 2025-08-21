@@ -77,7 +77,7 @@ app.get("/api/debug-supabase", async (req, res) => {
 // ✅ Serwujemy pliki z folderu public
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ✅ Fix 404 – catch-all na frontend
+// ✅ Fix 404 – catch-all na frontend (NA KOŃCU)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
