@@ -1,33 +1,40 @@
 <!doctype html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8">
-  <title>AWON – Dodaj obiekt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/styles.css">
+  <meta charset="utf-8" />
+  <title>AWON – Dodaj nowy obiekt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="form-card">
     <h1>AWON</h1>
     <h2>Dodaj nowy obiekt</h2>
-    <form id="propertyForm">
-      <input type="text" id="name" placeholder="Nazwa obiektu" required>
-      <textarea id="description" placeholder="Opis obiektu"></textarea>
-      <input type="text" id="address" placeholder="Adres obiektu">
-      <button type="submit">Dodaj obiekt</button>
+    <form id="addPropertyForm">
+      <input type="text" id="name" placeholder="Nazwa obiektu" required />
+      <input type="text" id="address" placeholder="Adres" />
+      <textarea id="description" placeholder="Opis obiektu" rows="4"></textarea>
+      <button type="submit">Zapisz obiekt</button>
     </form>
     <a href="/dashboard.html">⬅ Wróć do panelu</a>
   </div>
 
   <script>
-    document.getElementById("propertyForm").addEventListener("submit", async (e) => {
+    document.getElementById("addPropertyForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Musisz być zalogowany");
+        alert("Musisz się zalogować!");
+        window.location.href = "/login.html";
         return;
       }
+
+      const body = {
+        name: document.getElementById("name").value,
+        address: document.getElementById("address").value,
+        description: document.getElementById("description").value
+      };
 
       const res = await fetch("/api/properties", {
         method: "POST",
@@ -35,19 +42,15 @@
           "Content-Type": "application/json",
           "Authorization": "Bearer " + token
         },
-        body: JSON.stringify({
-          name: document.getElementById("name").value,
-          description: document.getElementById("description").value,
-          address: document.getElementById("address").value
-        })
+        body: JSON.stringify(body)
       });
 
-      const data = await res.json();
       if (res.ok) {
-        alert("Obiekt dodany!");
+        alert("Obiekt został dodany!");
         window.location.href = "/dashboard.html";
       } else {
-        alert("Błąd: " + data.error);
+        const err = await res.json();
+        alert("Błąd: " + (err.message || "Nie udało się zapisać"));
       }
     });
   </script>
