@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Logowanie – System Rezerwacji</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Logowanie</h1>
+    <form id="loginForm">
+      <label>Email:
+        <input type="email" id="email" required />
+      </label>
+      <label>Hasło:
+        <input type="password" id="password" required />
+      </label>
+      <button type="submit" class="btn">Zaloguj się</button>
+    </form>
+    <p><a href="/register.html">Nie masz konta? Zarejestruj się</a></p>
+    <p><a href="/forgot-password.html">Zapomniałeś hasła?</a></p>
+  </div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Zalogowano pomyślnie!");
+        localStorage.setItem("token", data.token);
+        window.location.href = "/";
+      } else {
+        alert("Błąd: " + data.message);
+      }
+    });
+  </script>
+</body>
+</html>
