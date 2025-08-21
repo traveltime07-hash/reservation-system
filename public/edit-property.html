@@ -2,80 +2,75 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>AWON – Edycja obiektu</title>
+  <title>AWON – Edytuj obiekt</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="form-card">
     <h1>AWON</h1>
-    <h2>Edycja obiektu</h2>
+    <h2>Edytuj obiekt</h2>
     <form id="editPropertyForm">
       <input type="text" id="name" placeholder="Nazwa obiektu" required />
       <input type="text" id="address" placeholder="Adres" />
-      <textarea id="description" placeholder="Opis"></textarea>
+      <textarea id="description" placeholder="Opis obiektu" rows="4"></textarea>
       <button type="submit">Zapisz zmiany</button>
     </form>
-    <a href="/dashboard.html">⬅ Powrót do panelu</a>
+    <a href="/dashboard.html">⬅ Wróć do panelu</a>
   </div>
 
   <script>
-    // Pobranie ID obiektu z adresu URL
+    // Pobieramy ID obiektu z adresu URL np. edit-property.html?id=5
     const urlParams = new URLSearchParams(window.location.search);
     const propertyId = urlParams.get("id");
 
-    async function loadProperty() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Musisz być zalogowany");
-        window.location.href = "/login.html";
-        return;
-      }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Musisz się zalogować!");
+      window.location.href = "/login.html";
+    }
 
-      // Pobieramy listę obiektów
-      const res = await fetch("/api/properties", {
+    async function loadProperty() {
+      const res = await fetch(`/api/properties/${propertyId}`, {
         headers: { "Authorization": "Bearer " + token }
       });
-      const data = await res.json();
 
-      // Szukamy właściwego obiektu
-      const property = data.find(p => p.id == propertyId);
-      if (!property) {
-        alert("Nie znaleziono obiektu");
+      if (!res.ok) {
+        alert("Nie udało się pobrać danych obiektu");
         window.location.href = "/dashboard.html";
         return;
       }
 
-      // Wypełniamy formularz danymi
-      document.getElementById("name").value = property.name;
+      const property = await res.json();
+      document.getElementById("name").value = property.name || "";
       document.getElementById("address").value = property.address || "";
       document.getElementById("description").value = property.description || "";
     }
 
-    // Obsługa zapisu zmian
     document.getElementById("editPropertyForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const token = localStorage.getItem("token");
-      const name = document.getElementById("name").value;
-      const address = document.getElementById("address").value;
-      const description = document.getElementById("description").value;
+      const body = {
+        name: document.getElementById("name").value,
+        address: document.getElementById("address").value,
+        description: document.getElementById("description").value
+      };
 
-      const res = await fetch("/api/properties/" + propertyId, {
+      const res = await fetch(`/api/properties/${propertyId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + token
         },
-        body: JSON.stringify({ name, address, description })
+        body: JSON.stringify(body)
       });
 
       if (res.ok) {
-        alert("Zapisano zmiany");
+        alert("Zapisano zmiany!");
         window.location.href = "/dashboard.html";
       } else {
-        const data = await res.json();
-        alert("Błąd: " + data.error);
+        const err = await res.json();
+        alert("Błąd: " + (err.message || "Nie udało się zapisać zmian"));
       }
     });
 
