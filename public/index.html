@@ -2,36 +2,55 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>System Rezerwacji — Demo</title>
+  <title>System Zarządzania Rezerwacjami</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>System Rezerwacji — Demo (Vercel + Supabase)</h1>
+  <header class="hero">
+    <div class="container">
+      <h1>System Zarządzania Rezerwacjami</h1>
+      <p>Prosty i wygodny panel online dla właścicieli apartamentów, hoteli i pensjonatów.</p>
+      <div class="cta-buttons">
+        <a href="/login.html" class="btn">Zaloguj się</a>
+        <a href="/register.html" class="btn btn-secondary">Zarejestruj się</a>
+      </div>
+    </div>
+  </header>
 
-    <section class="card">
-      <h2>Obiekty</h2>
-      <ul id="properties"></ul>
+  <main class="container">
+    <section>
+      <h2>O systemie</h2>
+      <p>
+        Nasz system nie jest portalem rezerwacyjnym dla klientów końcowych.  
+        To profesjonalne narzędzie do <strong>zarządzania istniejącymi rezerwacjami</strong> 
+        w Twoich obiektach.
+      </p>
     </section>
 
-    <section class="card">
-      <h2>Pokoje</h2>
-      <ul id="rooms"></ul>
+    <section>
+      <h2>Najważniejsze funkcje</h2>
+      <ul>
+        <li>Zarządzanie obiektami i pokojami</li>
+        <li>Podgląd rezerwacji i płatności</li>
+        <li>Dodawanie i edytowanie rezerwacji</li>
+        <li>Statystyki i raporty</li>
+        <li>Udostępnianie panelu innym osobom</li>
+        <li>Subskrypcja z darmowym okresem próbnym</li>
+      </ul>
     </section>
 
-    <section class="card">
-      <h2>Rezerwacje</h2>
-      <ul id="bookings"></ul>
+    <section>
+      <h2>Dla kogo?</h2>
+      <p>
+        System został stworzony z myślą o właścicielach apartamentów, pensjonatów i hoteli, 
+        którzy chcą mieć wszystkie swoje rezerwacje w jednym miejscu.
+      </p>
     </section>
+  </main>
 
-    <section class="card">
-      <h2>Płatności</h2>
-      <ul id="payments"></ul>
-    </section>
-
-    <footer>© 2025 — MVP do dalszej rozbudowy</footer>
-  </div>
-  <script src="/app.js"></script>
+  <footer>
+    © 2025 — System Zarządzania Rezerwacjami. Wersja MVP do dalszej rozbudowy.
+  </footer>
 </body>
 </html>
