@@ -1,0 +1,44 @@
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { pool } from './db.js';
+import authRouter from './routes/auth.js';
+import propertiesRouter from './routes/properties.js';
+import roomsRouter from './routes/rooms.js';
+import bookingsRouter from './routes/bookings.js';
+import paymentsRouter from './routes/payments.js';
+
+dotenv.config();
+
+const app = express();
+app.use(cors({
+  origin: ['http://localhost:3000','http://localhost:8080'],
+}));
+app.use(express.json());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// health
+app.get('/api/health', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT 1 as ok');
+    res.json({ status: 'ok', db: r.rows[0].ok === 1 });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// routers
+app.use('/api/auth', authRouter);
+app.use('/api', propertiesRouter);
+app.use('/api', roomsRouter);
+app.use('/api', bookingsRouter);
+app.use('/api/payments', paymentsRouter);
+
+// static
+app.use(express.static(path.join(__dirname, '../public')));
+
+export default app;

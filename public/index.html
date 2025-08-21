@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>System Rezerwacji — Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>System Rezerwacji — Demo (Vercel + Supabase)</h1>
+    <section class="card">
+      <h2>Wyszukaj obiekt i pokój</h2>
+      <div class="row">
+        <label>Obiekt:
+          <select id="property"></select>
+        </label>
+        <label>Pokój:
+          <select id="room"></select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Od: <input type="date" id="from" /></label>
+        <label>Do: <input type="date" id="to" /></label>
+      </div>
+      <button id="check">Sprawdź dostępność</button>
+      <div id="availability"></div>
+      <hr/>
+      <h3>Rezerwacja</h3>
+      <div class="row">
+        <label>Imię i nazwisko: <input type="text" id="name" placeholder="Jan Kowalski"/></label>
+        <label>Email: <input type="email" id="email" placeholder="jan@example.com"/></label>
+      </div>
+      <button id="book" disabled>Zarezerwuj</button>
+      <div id="booking"></div>
+    </section>
+    <footer>© 2025 — MVP do dalszej rozbudowy</footer>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
