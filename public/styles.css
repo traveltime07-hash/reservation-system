@@ -340,3 +340,11 @@ footer {
 #property-form button:hover {
   filter: brightness(1.1);
 }
+/* Zdjęcie w karcie obiektu */
+.property-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
