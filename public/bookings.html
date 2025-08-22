@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista rezerwacji</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📅 Lista rezerwacji</h1>
+    <p id="message">Ładowanie rezerwacji...</p>
+    <div id="bookingsList"></div>
+    <a href="dashboard.html">⬅ Powrót do panelu</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    async function loadBookings() {
+      try {
+        const res = await fetch("/api/bookings", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Nie udało się pobrać listy rezerwacji.");
+
+        const bookings = await res.json();
+        const listDiv = document.getElementById("bookingsList");
+        document.getElementById("message").innerText = "";
+
+        if (bookings.length === 0) {
+          listDiv.innerHTML = "<p>Brak rezerwacji.</p>";
+          return;
+        }
+
+        listDiv.innerHTML = bookings.map(b => `
+          <div class="form-card" style="margin-bottom: 1rem; text-align: left;">
+            <h3>🏠 Obiekt: ${b.property_name || "Nieznany"}</h3>
+            <p><strong>Pokój:</strong> ${b.room_name || "Nieznany"}</p>
+            <p><strong>Gość:</strong> ${b.guest_name || "Brak danych"}</p>
+            <p><strong>Od:</strong> ${new Date(b.start_date).toLocaleDateString("pl-PL")} 
+               <strong>Do:</strong> ${new Date(b.end_date).toLocaleDateString("pl-PL")}</p>
+          </div>
+        `).join("");
+      } catch (err) {
+        document.getElementById("message").innerText = err.message;
+      }
+    }
+
+    loadBookings();
+  </script>
+</body>
+</html>
