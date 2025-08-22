@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Rezerwacje - Panel admina</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+</head>
+<body>
+  <h1>📅 Wszystkie rezerwacje</h1>
+  <table border="1" cellpadding="5">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Użytkownik</th>
+        <th>Pokój</th>
+        <th>Data od</th>
+        <th>Data do</th>
+      </tr>
+    </thead>
+    <tbody id="reservationsTable"></tbody>
+  </table>
+
+  <script>
+    async function loadReservations() {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, user_id, room_id, start_date, end_date");
+      if (error) {
+        console.error(error);
+        return;
+      }
+      const tbody = document.getElementById("reservationsTable");
+      tbody.innerHTML = "";
+      data.forEach(res => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${res.id}</td>
+                        <td>${res.user_id}</td>
+                        <td>${res.room_id}</td>
+                        <td>${res.start_date}</td>
+                        <td>${res.end_date}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    loadReservations();
+  </script>
+</body>
+</html>
