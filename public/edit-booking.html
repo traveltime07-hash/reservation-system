@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edytuj rezerwację</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="form-card">
+    <h1>✏️ Edytuj rezerwację</h1>
+    <form id="editBookingForm">
+      <input type="text" id="guestName" placeholder="Imię i nazwisko gościa" required />
+      <input type="email" id="guestEmail" placeholder="Email gościa" required />
+      <label>Data od:</label>
+      <input type="date" id="startDate" required />
+      <label>Data do:</label>
+      <input type="date" id="endDate" required />
+      <select id="status" required>
+        <option value="confirmed">Potwierdzona</option>
+        <option value="pending">Oczekująca</option>
+        <option value="cancelled">Anulowana</option>
+      </select>
+      <button type="submit">Zapisz zmiany</button>
+    </form>
+    <a id="backLink" href="#">⬅ Powrót</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get("id");
+    const roomId = params.get("room_id");
+
+    if (!bookingId || !roomId) {
+      alert("Brak ID rezerwacji lub pokoju!");
+      window.location.href = "dashboard.html";
+    }
+
+    document.getElementById("backLink").href = `room-bookings.html?room_id=${roomId}`;
+
+    async function loadBooking() {
+      try {
+        const res = await fetch(`/api/bookings/${bookingId}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Nie udało się pobrać danych rezerwacji.");
+        const booking = await res.json();
+
+        document.getElementById("guestName").value = booking.guest_name;
+        document.getElementById("guestEmail").value = booking.guest_email;
+        document.getElementById("startDate").value = booking.start_date.split("T")[0];
+        document.getElementById("endDate").value = booking.end_date.split("T")[0];
+        document.getElementById("status").value = booking.status;
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    loadBooking();
+
+    document.getElementById("editBookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const guest_name = document.getElementById("guestName").value;
+      const guest_email = document.getElementById("guestEmail").value;
+      const start_date = document.getElementById("startDate").value;
+      const end_date = document.getElementById("endDate").value;
+      const status = document.getElementById("status").value;
+
+      try {
+        const res = await fetch(`/api/bookings/${bookingId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ guest_name, guest_email, start_date, end_date, status })
+        });
+
+        if (!res.ok) throw new Error("Nie udało się zapisać zmian.");
+        alert("✅ Zmiany zapisane!");
+        window.location.href = `room-bookings.html?room_id=${roomId}`;
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>
