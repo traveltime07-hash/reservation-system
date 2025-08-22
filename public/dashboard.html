@@ -2,90 +2,35 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Panel - AWON</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 <body>
-  <h1>Witaj w AWON!</h1>
-  <button onclick="logout()">Wyloguj się</button>
+  <h1>📌 Panel administratora</h1>
 
-  <section>
-    <h2>Twoje konto</h2>
-    <p id="user-email"></p>
-    <p id="user-role"></p>
-  </section>
-
-  <section>
-    <h2>Twoje rezerwacje</h2>
-    <div id="reservations"></div>
-  </section>
-
-  <section id="admin-panel" style="display:none;">
-    <h2>⚙️ Panel administratora</h2>
+  <nav>
     <ul>
-      <li><a href="users.html">👤 Zarządzanie użytkownikami</a></li>
-      <li><a href="all-reservations.html">📋 Wszystkie rezerwacje</a></li>
+      <li><a href="users.html">👤 Lista użytkowników</a></li>
+      <li><a href="all-reservations.html">📅 Wszystkie rezerwacje</a></li>
       <li><a href="reports.html">📊 Raporty</a></li>
+      <li><a href="add-property.html">🏡 Dodaj obiekt</a></li>
+      <li><a href="edit-property.html">✏️ Edytuj obiekt</a></li>
+      <li><a href="add-room.html">🛏️ Dodaj pokój</a></li>
+      <li><a href="edit-room.html">✏️ Edytuj pokój</a></li>
+      <li><a href="bookings.html">📅 Rezerwacje</a></li>
+      <li><a href="payments.html">💳 Płatności</a></li>
+      <li><a href="login.html">🚪 Wyloguj</a></li>
     </ul>
-  </section>
+  </nav>
 
-  <script type="module">
-    import { supabase } from './supabase.js';
-
-    async function loadUser() {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      document.getElementById("user-email").textContent = "Email: " + user.email;
-      document.getElementById("user-role").textContent = "Rola: " + user.role;
-
-      if (user.role === "admin") {
-        document.getElementById("admin-panel").style.display = "block";
-      }
-
-      loadReservations(user.id);
-    }
-
-    async function loadReservations(userId) {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("id, room_id, start_date, end_date")
-        .eq("user_id", userId);
-
-      const reservationsDiv = document.getElementById("reservations");
-      reservationsDiv.innerHTML = "";
-
-      if (error) {
-        reservationsDiv.innerHTML = `<p style="color:red;">Błąd: ${error.message}</p>`;
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        reservationsDiv.innerHTML = "<p>Brak rezerwacji</p>";
-        return;
-      }
-
-      data.forEach(r => {
-        reservationsDiv.innerHTML += `
-          <p>
-            Rezerwacja ID: ${r.id}, 
-            Pokój: ${r.room_id}, 
-            Od: ${r.start_date || '-'}, 
-            Do: ${r.end_date || '-'}
-          </p>
-        `;
-      });
-    }
-
-    window.logout = function() {
-      localStorage.removeItem("user");
+  <script>
+    // Sprawdzenie, czy użytkownik jest zalogowany
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Musisz być zalogowany!");
       window.location.href = "login.html";
-    };
-
-    loadUser();
+    }
   </script>
 </body>
 </html>
