@@ -15,7 +15,7 @@
       <textarea id="description" placeholder="Opis pokoju"></textarea>
       <button type="submit">Dodaj pokój</button>
     </form>
-    <a href="dashboard.html">⬅ Powrót do panelu</a>
+    <a id="backLink" href="dashboard.html">⬅ Powrót</a>
   </div>
 
   <script>
@@ -24,7 +24,6 @@
       window.location.href = "login.html";
     }
 
-    // pobierz ID obiektu z adresu URL, np. add-room.html?property_id=1
     const urlParams = new URLSearchParams(window.location.search);
     const propertyId = urlParams.get("property_id");
 
@@ -32,6 +31,9 @@
       alert("Brak ID obiektu. Wejdź przez panel.");
       window.location.href = "dashboard.html";
     }
+
+    // Ustaw link powrotu do właściwego obiektu
+    document.getElementById("backLink").href = `property-dashboard.html?property_id=${propertyId}`;
 
     document.getElementById("addRoomForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -51,7 +53,7 @@
 
         if (!res.ok) throw new Error("Nie udało się dodać pokoju.");
         alert("Pokój dodany pomyślnie!");
-        window.location.href = "dashboard.html";
+        window.location.href = `property-dashboard.html?property_id=${propertyId}`;
       } catch (err) {
         alert(err.message);
       }
