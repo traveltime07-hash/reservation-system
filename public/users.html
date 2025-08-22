@@ -1,39 +1,98 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Użytkownicy - Panel admina</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel admina - Użytkownicy</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1>👤 Lista użytkowników</h1>
-  <table border="1" cellpadding="5">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Email</th>
-        <th>Rola</th>
-      </tr>
-    </thead>
-    <tbody id="usersTable"></tbody>
-  </table>
+  <header>
+    <h1>👤 Lista użytkowników</h1>
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a> |
+      <a href="bookings.html">📅 Rezerwacje</a> |
+      <a href="users.html">👤 Użytkownicy</a> |
+      <a href="#" id="logoutBtn">🚪 Wyloguj</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Użytkownicy systemu</h2>
+      <table border="1" cellpadding="5" cellspacing="0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Rola</th>
+            <th>Akcje</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable">
+          <tr><td colspan="4">Ładowanie...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
 
   <script>
-    async function loadUsers() {
-      const { data, error } = await supabase.from("users").select("id, email, role");
-      if (error) {
-        console.error(error);
-        return;
-      }
-      const tbody = document.getElementById("usersTable");
-      tbody.innerHTML = "";
-      data.forEach(user => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${user.id}</td><td>${user.email}</td><td>${user.role}</td>`;
-        tbody.appendChild(tr);
-      });
+    const API_BASE = "/api"; // backend
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      window.location.href = "login.html";
     }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch(`${API_BASE}/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Błąd pobierania użytkowników");
+        const users = await res.json();
+
+        const table = document.getElementById("usersTable");
+        table.innerHTML = "";
+
+        users.forEach((u) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${u.id}</td>
+            <td>${u.email}</td>
+            <td>${u.role}</td>
+            <td>
+              <button onclick="deleteUser(${u.id})">❌ Usuń</button>
+            </td>
+          `;
+          table.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById("usersTable").innerHTML =
+          `<tr><td colspan="4">❌ Błąd ładowania</td></tr>`;
+      }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Czy na pewno chcesz usunąć tego użytkownika?")) return;
+      try {
+        const res = await fetch(`${API_BASE}/users/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Błąd usuwania");
+        loadUsers();
+      } catch (err) {
+        alert("❌ Nie udało się usunąć użytkownika");
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    });
+
     loadUsers();
   </script>
 </body>
