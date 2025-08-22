@@ -1,80 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edytuj pokój</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <title>AWON – Edytuj pokój</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="form-card">
-    <h1>✏️ Edytuj pokój</h1>
-    <form id="editRoomForm">
-      <input type="text" id="roomName" placeholder="Nazwa pokoju" required />
-      <input type="number" id="capacity" placeholder="Ilość miejsc" required min="1" />
+    <h1>AWON</h1>
+    <h2>Edytuj pokój</h2>
+    <form id="edit-room-form">
+      <input type="text" id="name" placeholder="Nazwa pokoju" required />
       <textarea id="description" placeholder="Opis pokoju"></textarea>
+      <input type="number" id="capacity" placeholder="Ilość miejsc" min="1" required />
+
+      <select id="status" required>
+        <option value="available">Dostępny</option>
+        <option value="occupied">Zajęty</option>
+        <option value="unavailable">Niedostępny</option>
+      </select>
+
+      <input type="text" id="reservation" placeholder="Przypisana rezerwacja (np. nazwisko)" />
+
       <button type="submit">Zapisz zmiany</button>
     </form>
-    <a href="dashboard.html">⬅ Powrót do panelu</a>
+    <a href="/dashboard.html">⬅ Powrót do panelu</a>
   </div>
 
   <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "login.html";
-    }
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("id");
 
-    // Pobierz ID pokoju z parametru w URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomId = urlParams.get("id");
-
-    if (!roomId) {
-      alert("Brak ID pokoju do edycji.");
-      window.location.href = "dashboard.html";
-    }
-
-    // Załaduj dane pokoju
     async function loadRoom() {
       try {
-        const res = await fetch(`/api/rooms/${roomId}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        if (!res.ok) throw new Error("Nie udało się pobrać danych pokoju.");
+        const res = await fetch(`/api/rooms/${roomId}`);
+        if (!res.ok) throw new Error("Nie udało się pobrać danych pokoju");
         const room = await res.json();
 
-        document.getElementById("roomName").value = room.name;
-        document.getElementById("capacity").value = room.capacity;
+        document.getElementById("name").value = room.name;
         document.getElementById("description").value = room.description || "";
+        document.getElementById("capacity").value = room.capacity;
+        document.getElementById("status").value = room.status || "available";
+        document.getElementById("reservation").value = room.reservation || "";
       } catch (err) {
         alert(err.message);
-        window.location.href = "dashboard.html";
       }
     }
 
-    // Obsługa zapisu zmian
-    document.getElementById("editRoomForm").addEventListener("submit", async (e) => {
+    document.getElementById("edit-room-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("roomName").value;
-      const capacity = document.getElementById("capacity").value;
-      const description = document.getElementById("description").value;
+      const updatedRoom = {
+        name: document.getElementById("name").value,
+        description: document.getElementById("description").value,
+        capacity: document.getElementById("capacity").value,
+        status: document.getElementById("status").value,
+        reservation: document.getElementById("reservation").value
+      };
 
-      try {
-        const res = await fetch(`/api/rooms/${roomId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ name, capacity, description })
-        });
+      const res = await fetch(`/api/rooms/${roomId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedRoom)
+      });
 
-        if (!res.ok) throw new Error("Nie udało się zaktualizować pokoju.");
-        alert("Pokój został zaktualizowany!");
-        window.location.href = "dashboard.html";
-      } catch (err) {
-        alert(err.message);
+      if (res.ok) {
+        alert("Pokój zaktualizowany pomyślnie!");
+        window.location.href = "/dashboard.html";
+      } else {
+        alert("Błąd przy aktualizacji pokoju");
       }
     });
 
