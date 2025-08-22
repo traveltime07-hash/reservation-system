@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodaj rezerwację</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="form-card">
+    <h1>📅 Dodaj rezerwację</h1>
+    <form id="addBookingForm">
+      <input type="text" id="guestName" placeholder="Imię i nazwisko gościa" required />
+      <input type="email" id="guestEmail" placeholder="Email gościa" />
+      <input type="tel" id="guestPhone" placeholder="Telefon gościa" />
+      <label>Data przyjazdu</label>
+      <input type="date" id="checkIn" required />
+      <label>Data wyjazdu</label>
+      <input type="date" id="checkOut" required />
+      <button type="submit">Dodaj rezerwację</button>
+    </form>
+    <a id="backLink" href="dashboard.html">⬅ Powrót</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get("room_id");
+    const propertyId = urlParams.get("property_id");
+
+    if (!roomId || !propertyId) {
+      alert("Brak ID pokoju lub obiektu. Wejdź przez panel.");
+      window.location.href = "dashboard.html";
+    }
+
+    // Link powrotny do panelu obiektu
+    document.getElementById("backLink").href = `property-dashboard.html?property_id=${propertyId}`;
+
+    document.getElementById("addBookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const guest_name = document.getElementById("guestName").value;
+      const guest_email = document.getElementById("guestEmail").value;
+      const guest_phone = document.getElementById("guestPhone").value;
+      const check_in = document.getElementById("checkIn").value;
+      const check_out = document.getElementById("checkOut").value;
+
+      try {
+        const res = await fetch(`/api/rooms/${roomId}/bookings`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ guest_name, guest_email, guest_phone, check_in, check_out })
+        });
+
+        if (!res.ok) throw new Error("Nie udało się dodać rezerwacji.");
+        alert("Rezerwacja dodana pomyślnie!");
+        window.location.href = `property-dashboard.html?property_id=${propertyId}`;
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>
