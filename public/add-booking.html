@@ -4,97 +4,98 @@
   <meta charset="UTF-8">
   <title>Dodaj rezerwację</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    form { max-width: 600px; margin: auto; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; }
-    button { margin-top: 20px; padding: 10px 15px; }
-  </style>
 </head>
 <body>
   <h1>➕ Dodaj rezerwację</h1>
 
-  <form id="bookingForm">
+  <form id="addBookingForm" class="form">
     <label>Obiekt:
-      <select id="propertySelect" required></select>
+      <select id="propertySelect" class="input" required></select>
     </label>
 
     <label>Pokój:
-      <select id="roomSelect" required></select>
+      <select id="roomSelect" class="input" required></select>
     </label>
 
     <label>Data początkowa:
-      <input type="date" id="startDate" required>
+      <input type="date" id="startDate" class="input" required>
     </label>
 
     <label>Data końcowa:
-      <input type="date" id="endDate" required>
+      <input type="date" id="endDate" class="input" required>
     </label>
 
     <h3>Dane klienta</h3>
     <label>Imię i nazwisko:
-      <input type="text" id="guestName" required>
+      <input type="text" id="guestName" class="input" required>
     </label>
     <label>Telefon:
-      <input type="text" id="guestPhone">
+      <input type="text" id="guestPhone" class="input">
     </label>
     <label>Email:
-      <input type="email" id="guestEmail">
+      <input type="email" id="guestEmail" class="input">
     </label>
 
     <h3>Szczegóły pobytu</h3>
-    <label>Liczba dorosłych:
-      <input type="number" id="adults" min="1" value="1">
+    <label>Dorośli:
+      <input type="number" id="adults" class="input" value="1" min="1">
     </label>
-    <label>Liczba dzieci:
-      <input type="number" id="children" min="0" value="0">
+    <label>Dzieci:
+      <input type="number" id="children" class="input" value="0" min="0">
     </label>
-    <label>Zwierzęta:
-      <input type="checkbox" id="pets"> Tak
+    <label>
+      <input type="checkbox" id="pets"> Zwierzęta
     </label>
 
     <h3>Płatności</h3>
     <label>Cena całkowita:
-      <input type="number" id="totalPrice" step="0.01">
+      <input type="number" id="totalPrice" class="input" step="0.01">
     </label>
     <label>Zadatek:
-      <input type="number" id="deposit" step="0.01" oninput="updateDueAmount()">
+      <input type="number" id="deposit" class="input" step="0.01" oninput="updateRemaining()">
     </label>
     <label>Termin dopłaty:
-      <input type="date" id="dueDate">
+      <input type="date" id="dueDate" class="input">
     </label>
     <label>Dopłata (automatyczna):
-      <input type="number" id="remainingAmount" readonly>
+      <input type="number" id="remainingAmount" class="input" readonly>
     </label>
 
     <h3>Inne</h3>
     <label>Notatki:
-      <textarea id="notes"></textarea>
+      <textarea id="notes" class="input"></textarea>
     </label>
     <label>
-      <input type="checkbox" id="cleaningTask"> Wyślij informację o sprzątaniu
+      <input type="checkbox" id="cleaningTask"> Sprzątanie
     </label>
     <label>
-      <input type="checkbox" id="safeReminder"> Powiadomić klienta o odbiorze kluczy z sejfu
+      <input type="checkbox" id="safeReminder"> Sejf z kluczami
     </label>
 
-    <button type="submit">Zapisz rezerwację</button>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">💾 Zapisz</button>
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='bookings.html'">⬅ Powrót</button>
+    </div>
   </form>
 
   <script>
-    const API_BOOKINGS = "/bookings";
     const API_PROPERTIES = "/properties";
     const API_ROOMS = "/rooms";
-    let roomsByProperty = {};
+    const API_BOOKINGS = "/bookings";
+    const token = localStorage.getItem("token");
 
     async function loadProperties() {
-      const token = localStorage.getItem("token");
       const res = await fetch(API_PROPERTIES, {
         headers: { "Authorization": "Bearer " + token }
       });
       const properties = await res.json();
       const select = document.getElementById("propertySelect");
+
+      if (properties.length === 0) {
+        alert("Najpierw dodaj obiekt.");
+        window.location.href = "add-property.html";
+        return;
+      }
 
       select.innerHTML = "";
       properties.forEach(p => {
@@ -111,15 +112,13 @@
     }
 
     async function loadRooms(propertyId) {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_ROOMS}?property_id=${propertyId}`, {
         headers: { "Authorization": "Bearer " + token }
       });
       const rooms = await res.json();
-      roomsByProperty[propertyId] = rooms;
-
       const select = document.getElementById("roomSelect");
       select.innerHTML = "";
+
       rooms.forEach(r => {
         const opt = document.createElement("option");
         opt.value = r.id;
@@ -132,34 +131,32 @@
       }
     }
 
-    function updateDueAmount() {
+    document.getElementById("propertySelect").addEventListener("change", e => {
+      loadRooms(e.target.value);
+    });
+
+    function updateRemaining() {
       const total = parseFloat(document.getElementById("totalPrice").value) || 0;
       const deposit = parseFloat(document.getElementById("deposit").value) || 0;
       document.getElementById("remainingAmount").value = Math.max(total - deposit, 0).toFixed(2);
     }
 
-    document.getElementById("propertySelect").addEventListener("change", e => {
-      loadRooms(e.target.value);
-    });
-
-    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+    document.getElementById("addBookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      const token = localStorage.getItem("token");
 
       const data = {
         room_id: document.getElementById("roomSelect").value,
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value,
         guest_name: document.getElementById("guestName").value,
         guest_phone: document.getElementById("guestPhone").value,
         guest_email: document.getElementById("guestEmail").value,
-        start_date: document.getElementById("startDate").value,
-        end_date: document.getElementById("endDate").value,
-        adults: parseInt(document.getElementById("adults").value) || 1,
-        children: parseInt(document.getElementById("children").value) || 0,
+        adults: parseInt(document.getElementById("adults").value),
+        children: parseInt(document.getElementById("children").value),
         pets: document.getElementById("pets").checked,
-        total_price: parseFloat(document.getElementById("totalPrice").value) || null,
-        deposit: parseFloat(document.getElementById("deposit").value) || null,
-        due_date: document.getElementById("dueDate").value || null,
+        total_price: parseFloat(document.getElementById("totalPrice").value),
+        deposit: parseFloat(document.getElementById("deposit").value),
+        due_date: document.getElementById("dueDate").value,
         notes: document.getElementById("notes").value,
         cleaning_task: document.getElementById("cleaningTask").checked,
         safe_reminder: document.getElementById("safeReminder").checked
@@ -175,7 +172,7 @@
       });
 
       if (res.ok) {
-        alert("Rezerwacja dodana!");
+        alert("Rezerwacja dodana");
         window.location.href = "bookings.html";
       } else {
         const err = await res.json();
@@ -183,7 +180,6 @@
       }
     });
 
-    // Auto-ładowanie
     loadProperties();
   </script>
 </body>
