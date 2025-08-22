@@ -1,92 +1,91 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AWON - Dashboard</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <meta charset="UTF-8">
+  <title>Panel - AWON</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Witaj w AWON!</h1>
-    <button id="logoutBtn">Wyloguj się</button>
-  </header>
+  <h1>Witaj w AWON!</h1>
+  <button onclick="logout()">Wyloguj się</button>
 
-  <main>
-    <section>
-      <h2>Twoje konto</h2>
-      <p>Email: <span id="user-email"></span></p>
-      <p>Rola: <span id="user-role"></span></p>
-    </section>
+  <section>
+    <h2>Twoje konto</h2>
+    <p id="user-email"></p>
+    <p id="user-role"></p>
+  </section>
 
-    <section>
-      <h2>Twoje rezerwacje</h2>
-      <div id="bookings-list">
-        <p>Ładowanie rezerwacji...</p>
-      </div>
-    </section>
+  <section>
+    <h2>Twoje rezerwacje</h2>
+    <div id="reservations"></div>
+  </section>
 
-    <!-- ✅ Panel administratora -->
-    <section id="admin-panel" style="display:none; margin-top: 30px; border-top: 2px solid #ccc; padding-top: 20px;">
-      <h2>⚙️ Panel administratora</h2>
-      <ul>
-        <li><a href="manage-users.html">👤 Zarządzanie użytkownikami</a></li>
-        <li><a href="all-bookings.html">📅 Wszystkie rezerwacje</a></li>
-        <li><a href="reports.html">📊 Raporty</a></li>
-      </ul>
-    </section>
-  </main>
+  <section id="admin-panel" style="display:none;">
+    <h2>⚙️ Panel administratora</h2>
+    <ul>
+      <li><a href="users.html">👤 Zarządzanie użytkownikami</a></li>
+      <li><a href="all-reservations.html">📋 Wszystkie rezerwacje</a></li>
+      <li><a href="reports.html">📊 Raporty</a></li>
+    </ul>
+  </section>
 
-  <script>
-    // Sprawdzenie zalogowanego użytkownika
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
+  <script type="module">
+    import { supabase } from './supabase.js';
 
-    if (!token || !user) {
-      window.location.href = "login.html";
+    async function loadUser() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("user-email").textContent = "Email: " + user.email;
+      document.getElementById("user-role").textContent = "Rola: " + user.role;
+
+      if (user.role === "admin") {
+        document.getElementById("admin-panel").style.display = "block";
+      }
+
+      loadReservations(user.id);
     }
 
-    document.getElementById("user-email").textContent = user.email;
-    document.getElementById("user-role").textContent = user.role;
+    async function loadReservations(userId) {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, room_id, start_date, end_date")
+        .eq("user_id", userId);
 
-    // ✅ Jeśli admin -> pokaż panel
-    if (user.role === "admin") {
-      document.getElementById("admin-panel").style.display = "block";
+      const reservationsDiv = document.getElementById("reservations");
+      reservationsDiv.innerHTML = "";
+
+      if (error) {
+        reservationsDiv.innerHTML = `<p style="color:red;">Błąd: ${error.message}</p>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        reservationsDiv.innerHTML = "<p>Brak rezerwacji</p>";
+        return;
+      }
+
+      data.forEach(r => {
+        reservationsDiv.innerHTML += `
+          <p>
+            Rezerwacja ID: ${r.id}, 
+            Pokój: ${r.room_id}, 
+            Od: ${r.start_date || '-'}, 
+            Do: ${r.end_date || '-'}
+          </p>
+        `;
+      });
     }
 
-    // Obsługa wylogowania
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("token");
+    window.logout = function() {
       localStorage.removeItem("user");
       window.location.href = "login.html";
-    });
+    };
 
-    // Pobranie rezerwacji użytkownika
-    async function loadBookings() {
-      try {
-        const res = await fetch("/api/bookings", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-
-        const bookingsDiv = document.getElementById("bookings-list");
-        bookingsDiv.innerHTML = "";
-
-        if (data.length === 0) {
-          bookingsDiv.innerHTML = "<p>Brak rezerwacji.</p>";
-        } else {
-          data.forEach(b => {
-            const el = document.createElement("div");
-            el.textContent = `Rezerwacja ID: ${b.id}, Pokój: ${b.room_id}, Od: ${b.start_date}, Do: ${b.end_date}`;
-            bookingsDiv.appendChild(el);
-          });
-        }
-      } catch (err) {
-        document.getElementById("bookings-list").innerHTML = "<p>Błąd pobierania rezerwacji.</p>";
-      }
-    }
-
-    loadBookings();
+    loadUser();
   </script>
 </body>
 </html>
