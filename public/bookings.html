@@ -4,44 +4,28 @@
   <meta charset="UTF-8">
   <title>Lista rezerwacji</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    .filters { margin-bottom: 15px; }
-    .filters input, .filters select { margin-right: 10px; padding: 5px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
-    th { background: #f4f4f4; }
-    .calendar { margin-top: 30px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .day { border: 1px solid #ccc; padding: 10px; text-align: center; min-height: 60px; position: relative; }
-    .free { background: #d4edda; }     /* zielony */
-    .booked { background: #f8d7da; }   /* czerwony */
-    .online { background: #cce5ff; }   /* niebieski */
-    .departure::after { content: "\\"; position: absolute; top: 0; right: 0; color: #000; }
-    .same-day { background: linear-gradient(to bottom, #cce5ff 50%, #d4edda 50%); }
-  </style>
 </head>
 <body>
   <h1>📅 Rezerwacje</h1>
 
   <div class="filters">
     <label>Obiekt:
-      <select id="propertyFilter"></select>
+      <select id="propertyFilter" class="input"></select>
     </label>
     <label>Pokój:
-      <select id="roomFilter"></select>
+      <select id="roomFilter" class="input"></select>
     </label>
     <label>Od:
-      <input type="date" id="startDateFilter">
+      <input type="date" id="startDateFilter" class="input">
     </label>
     <label>Do:
-      <input type="date" id="endDateFilter">
+      <input type="date" id="endDateFilter" class="input">
     </label>
-    <button onclick="loadBookings()">Filtruj</button>
-    <button onclick="window.location.href='add-booking.html'">+ Dodaj rezerwację</button>
+    <button class="btn btn-primary" onclick="loadBookings()">Filtruj</button>
+    <button class="btn btn-success" onclick="window.location.href='add-booking.html'">+ Dodaj rezerwację</button>
   </div>
 
-  <table>
+  <table class="table">
     <thead>
       <tr>
         <th>ID</th>
@@ -160,24 +144,22 @@
 
       const today = new Date();
       const year = today.getFullYear();
-      const month = today.getMonth(); // bieżący miesiąc
-      const firstDay = new Date(year, month, 1);
+      const month = today.getMonth();
       const lastDay = new Date(year, month + 1, 0);
-
       const daysInMonth = lastDay.getDate();
+
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
         const div = document.createElement("div");
         div.classList.add("day");
         div.textContent = d;
 
-        // sprawdzamy rezerwacje
         const booking = bookings.find(b => b.start_date <= dateStr && b.end_date >= dateStr);
         if (booking) {
           if (booking.notes && booking.notes.toLowerCase().includes("booking")) {
-            div.classList.add("online"); // rezerwacja online
+            div.classList.add("status-online");
           } else {
-            div.classList.add("booked");
+            div.classList.add("status-booked");
           }
           if (booking.end_date === dateStr) {
             div.classList.add("departure");
@@ -186,7 +168,7 @@
             div.classList.add("same-day");
           }
         } else {
-          div.classList.add("free");
+          div.classList.add("status-free");
         }
 
         calendarDiv.appendChild(div);
