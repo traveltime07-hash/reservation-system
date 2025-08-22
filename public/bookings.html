@@ -2,181 +2,79 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Lista rezerwacji</title>
+  <title>Lista rezerwacji - AWON</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>📅 Rezerwacje</h1>
+  <div class="container">
+    <h1>Lista rezerwacji</h1>
+    <button onclick="window.location.href='add-booking.html'" class="btn-primary">
+      ➕ Dodaj rezerwację
+    </button>
 
-  <div class="filters">
-    <label>Obiekt:
-      <select id="propertyFilter" class="input"></select>
-    </label>
-    <label>Pokój:
-      <select id="roomFilter" class="input"></select>
-    </label>
-    <label>Od:
-      <input type="date" id="startDateFilter" class="input">
-    </label>
-    <label>Do:
-      <input type="date" id="endDateFilter" class="input">
-    </label>
-    <button class="btn btn-primary" onclick="loadBookings()">Filtruj</button>
-    <button class="btn btn-success" onclick="window.location.href='add-booking.html'">+ Dodaj rezerwację</button>
+    <table id="bookingsTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Pokój</th>
+          <th>Gość</th>
+          <th>Telefon</th>
+          <th>Od</th>
+          <th>Do</th>
+          <th>Dorośli</th>
+          <th>Dzieci</th>
+          <th>Cena</th>
+          <th>Zadatek</th>
+          <th>Opcje</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Obiekt</th>
-        <th>Pokój</th>
-        <th>Gość</th>
-        <th>Telefon</th>
-        <th>Email</th>
-        <th>Od</th>
-        <th>Do</th>
-        <th>Dorośli</th>
-        <th>Dzieci</th>
-        <th>Zwierzęta</th>
-        <th>Cena</th>
-        <th>Notatki</th>
-      </tr>
-    </thead>
-    <tbody id="bookingsTable"></tbody>
-  </table>
-
-  <h2>Kalendarz</h2>
-  <div id="calendar" class="calendar"></div>
-
   <script>
-    const API_BOOKINGS = "/bookings";
-    const API_PROPERTIES = "/properties";
-    const API_ROOMS = "/rooms";
+    const API_URL = "http://localhost:3000"; // zmień na swój backend
+    const token = localStorage.getItem("token");
 
-    async function loadProperties() {
-      const token = localStorage.getItem("token");
-      const res = await fetch(API_PROPERTIES, {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      const properties = await res.json();
-      const select = document.getElementById("propertyFilter");
-
-      select.innerHTML = "<option value=''>-- wszystkie --</option>";
-      properties.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.name;
-        select.appendChild(opt);
-      });
+    if (!token) {
+      alert("Musisz być zalogowany!");
+      window.location.href = "login.html";
     }
-
-    async function loadRooms(propertyId) {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_ROOMS}?property_id=${propertyId}`, {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      const rooms = await res.json();
-      const select = document.getElementById("roomFilter");
-      select.innerHTML = "<option value=''>-- wszystkie --</option>";
-      rooms.forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r.id;
-        opt.textContent = r.name;
-        select.appendChild(opt);
-      });
-    }
-
-    document.getElementById("propertyFilter").addEventListener("change", e => {
-      if (e.target.value) {
-        loadRooms(e.target.value);
-      } else {
-        document.getElementById("roomFilter").innerHTML = "<option value=''>-- wszystkie --</option>";
-      }
-    });
 
     async function loadBookings() {
-      const token = localStorage.getItem("token");
-      const property = document.getElementById("propertyFilter").value;
-      const room = document.getElementById("roomFilter").value;
-      const start = document.getElementById("startDateFilter").value;
-      const end = document.getElementById("endDateFilter").value;
-
-      let url = `${API_BOOKINGS}?`;
-      if (property) url += `property_id=${property}&`;
-      if (room) url += `room_id=${room}&`;
-      if (start) url += `start_date=${start}&`;
-      if (end) url += `end_date=${end}`;
-
-      const res = await fetch(url, {
+      const res = await fetch(`${API_URL}/bookings`, {
         headers: { "Authorization": "Bearer " + token }
       });
       const bookings = await res.json();
-
-      const tbody = document.getElementById("bookingsTable");
+      const tbody = document.querySelector("#bookingsTable tbody");
       tbody.innerHTML = "";
+
       bookings.forEach(b => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${b.id}</td>
-          <td>${b.property_name}</td>
-          <td>${b.room_name}</td>
+          <td>${b.room_name || "-"}</td>
           <td>${b.guest_name || "-"}</td>
           <td>${b.guest_phone || "-"}</td>
-          <td>${b.guest_email || "-"}</td>
           <td>${b.start_date}</td>
           <td>${b.end_date}</td>
           <td>${b.adults}</td>
           <td>${b.children}</td>
-          <td>${b.pets ? "🐾" : "-"}</td>
-          <td>${b.total_price || "-"}</td>
-          <td>${b.notes || "-"}</td>
+          <td>${b.total_price || 0} zł</td>
+          <td>${b.deposit || 0} zł</td>
+          <td>
+            <button onclick="viewBooking(${b.id})" class="btn-secondary">👁 Podgląd</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
-
-      renderCalendar(bookings);
     }
 
-    function renderCalendar(bookings) {
-      const calendarDiv = document.getElementById("calendar");
-      calendarDiv.innerHTML = "";
-
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
-      const lastDay = new Date(year, month + 1, 0);
-      const daysInMonth = lastDay.getDate();
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-        const div = document.createElement("div");
-        div.classList.add("day");
-        div.textContent = d;
-
-        const booking = bookings.find(b => b.start_date <= dateStr && b.end_date >= dateStr);
-        if (booking) {
-          if (booking.notes && booking.notes.toLowerCase().includes("booking")) {
-            div.classList.add("status-online");
-          } else {
-            div.classList.add("status-booked");
-          }
-          if (booking.end_date === dateStr) {
-            div.classList.add("departure");
-          }
-          if (booking.start_date === booking.end_date && booking.start_date === dateStr) {
-            div.classList.add("same-day");
-          }
-        } else {
-          div.classList.add("status-free");
-        }
-
-        calendarDiv.appendChild(div);
-      }
+    function viewBooking(id) {
+      window.location.href = `booking.html?id=${id}`;
     }
 
-    // Auto-ładowanie
-    loadProperties().then(loadBookings);
+    loadBookings();
   </script>
 </body>
 </html>
