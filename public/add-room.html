@@ -1,76 +1,54 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AWON – Dodaj pokój</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodaj pokój</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="form-card">
-    <h1>AWON</h1>
-    <h2>Dodaj pokój</h2>
-
+  <div class="container">
+    <h1>Dodaj pokój</h1>
     <form id="addRoomForm">
-      <input type="text" id="name" placeholder="Nazwa pokoju" required />
-      <textarea id="description" placeholder="Opis pokoju"></textarea>
-      <input type="number" id="price" placeholder="Cena za noc (PLN)" required />
-      <input type="number" id="capacity" placeholder="Liczba miejsc" required />
+      <input type="text" id="name" placeholder="Nazwa pokoju" required>
+      <input type="number" id="capacity" placeholder="Liczba gości" required>
+      <textarea id="description" placeholder="Opis"></textarea>
       <button type="submit">Dodaj pokój</button>
     </form>
-
-    <a href="/dashboard.html">⬅️ Powrót do panelu</a>
+    <p id="message"></p>
+    <a href="dashboard.html">⬅ Powrót do panelu</a>
   </div>
 
   <script>
-    const form = document.getElementById("addRoomForm");
-
-    // Pobierz ID obiektu z query param ?propertyId=123
-    const urlParams = new URLSearchParams(window.location.search);
-    const propertyId = urlParams.get("propertyId");
-
-    if (!propertyId) {
-      alert("Brak ID obiektu w adresie!");
-      window.location.href = "/dashboard.html";
-    }
-
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Musisz być zalogowany!");
-      window.location.href = "/login.html";
+      window.location.href = "login.html";
     }
 
-    // 🔹 Obsługa formularza
-    form.addEventListener("submit", async (e) => {
+    document.getElementById("addRoomForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const room = {
-        property_id: propertyId,
+      const newRoom = {
         name: document.getElementById("name").value,
-        description: document.getElementById("description").value,
-        price: parseFloat(document.getElementById("price").value),
         capacity: parseInt(document.getElementById("capacity").value),
+        description: document.getElementById("description").value
       };
 
       try {
-        const res = await fetch(`/api/rooms`, {
+        const res = await fetch("/api/rooms", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify(room),
+          body: JSON.stringify(newRoom)
         });
 
-        const data = await res.json();
-        if (res.ok) {
-          alert("Pokój dodany!");
-          window.location.href = `/edit-property.html?id=${propertyId}`;
-        } else {
-          alert("Błąd: " + (data.error || "Nie udało się dodać pokoju"));
-        }
+        if (!res.ok) throw new Error("Błąd przy dodawaniu pokoju.");
+        document.getElementById("message").innerText = "✅ Pokój został dodany!";
+        document.getElementById("addRoomForm").reset();
       } catch (err) {
-        alert("Błąd sieci: " + err.message);
+        document.getElementById("message").innerText = err.message;
       }
     });
   </script>
