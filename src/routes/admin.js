@@ -1,104 +1,104 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db");
+const pool = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// Middleware: tylko admin
-function isAdmin(req, res, next) {
-  if (req.user && req.user.role === "admin") return next();
-  return res.status(403).json({ error: "Brak dostępu" });
+// Middleware sprawdzający rolę admina
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Dostęp tylko dla administratora" });
+  }
+  next();
 }
 
-// 📌 Lista użytkowników + wyszukiwanie
-router.get("/users", isAdmin, async (req, res) => {
+// 📌 Lista użytkowników (z opcjonalnym wyszukiwaniem po e-mailu)
+router.get("/users", requireAdmin, async (req, res) => {
   try {
-    const { email } = req.query;
-    let query = "SELECT id, email, role, created_at, last_login, subscription_status, subscription_expires, is_active FROM users";
-    let params = [];
-
-    if (email) {
-      query += " WHERE email ILIKE $1";
-      params.push(`%${email}%`);
-    }
-
-    query += " ORDER BY created_at DESC";
-    const { rows } = await db.query(query, params);
-    res.json(rows);
+    const search = req.query.search || "";
+    const result = await pool.query(
+      `SELECT id, email, role, created_at, last_login, is_active, subscription_status, subscription_expires
+       FROM users
+       WHERE email ILIKE $1
+       ORDER BY created_at DESC`,
+      [`%${search}%`]
+    );
+    res.json(result.rows);
   } catch (err) {
-    console.error("Błąd GET /admin/users:", err);
-    res.status(500).json({ error: "Błąd pobierania użytkowników" });
+    console.error("Błąd pobierania użytkowników:", err);
+    res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
 // 📌 Statystyki
-router.get("/stats", isAdmin, async (req, res) => {
+router.get("/stats", requireAdmin, async (req, res) => {
   try {
-    const users = await db.query("SELECT COUNT(*) FROM users");
-    const bookings = await db.query("SELECT COUNT(*) FROM bookings");
-    const active = await db.query("SELECT COUNT(*) FROM users WHERE is_active = true");
-    const inactive = await db.query("SELECT COUNT(*) FROM users WHERE is_active = false");
+    const activeUsers = await pool.query("SELECT COUNT(*) FROM users WHERE is_active = true");
+    const inactiveUsers = await pool.query("SELECT COUNT(*) FROM users WHERE is_active = false");
+    const totalBookings = await pool.query("SELECT COUNT(*) FROM bookings");
 
     res.json({
-      total_users: parseInt(users.rows[0].count),
-      total_bookings: parseInt(bookings.rows[0].count),
-      active_users: parseInt(active.rows[0].count),
-      inactive_users: parseInt(inactive.rows[0].count)
+      active_users: parseInt(activeUsers.rows[0].count, 10),
+      inactive_users: parseInt(inactiveUsers.rows[0].count, 10),
+      total_bookings: parseInt(totalBookings.rows[0].count, 10)
     });
   } catch (err) {
-    console.error("Błąd GET /admin/stats:", err);
-    res.status(500).json({ error: "Błąd pobierania statystyk" });
+    console.error("Błąd statystyk:", err);
+    res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
-// 📌 Reset hasła (symulacja wysłania linku)
-router.post("/reset-password/:id", isAdmin, async (req, res) => {
+// 📌 Reset hasła – wysłanie linku (placeholder, do wdrożenia e-mail)
+router.post("/users/:id/reset-password", requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    // W realnej wersji: wygenerowanie tokena + wysyłka e-maila
-    console.log("RESET PASSWORD LINK for user ID:", id);
-    res.json({ message: "Link resetu hasła został wysłany (symulacja)" });
+    const userId = req.params.id;
+    const result = await pool.query("SELECT email FROM users WHERE id = $1", [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Nie znaleziono użytkownika" });
+    }
+
+    const email = result.rows[0].email;
+    console.log(`📧 Wysłano link resetu hasła na ${email} (do zaimplementowania system e-mail)`);
+
+    res.json({ message: "Wysłano link resetujący (symulacja)" });
   } catch (err) {
-    console.error("Błąd POST /admin/reset-password:", err);
-    res.status(500).json({ error: "Błąd resetu hasła" });
+    console.error("Błąd resetu hasła:", err);
+    res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
-// 📌 Nadaj nowe hasło ręcznie
-router.post("/set-password/:id", isAdmin, async (req, res) => {
+// 📌 Nadanie nowego hasła ręcznie
+router.post("/users/:id/set-password", requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const userId = req.params.id;
     const { password } = req.body;
-
     if (!password) return res.status(400).json({ error: "Brak hasła" });
 
     const hashed = await bcrypt.hash(password, 10);
-    await db.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, id]);
+    await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, userId]);
 
-    res.json({ message: "Hasło zostało zmienione" });
+    res.json({ message: "Hasło zaktualizowane" });
   } catch (err) {
-    console.error("Błąd POST /admin/set-password:", err);
-    res.status(500).json({ error: "Błąd zmiany hasła" });
+    console.error("Błąd ustawiania hasła:", err);
+    res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
-// 📌 Zmień subskrypcję
-router.post("/set-subscription/:id", isAdmin, async (req, res) => {
+// 📌 Edycja subskrypcji
+router.post("/users/:id/subscription", requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { expires } = req.body;
+    const userId = req.params.id;
+    const { subscription_expires } = req.body;
 
-    if (!expires) return res.status(400).json({ error: "Brak daty wygaśnięcia" });
-
-    await db.query(
+    await pool.query(
       "UPDATE users SET subscription_status = 'premium', subscription_expires = $1 WHERE id = $2",
-      [expires, id]
+      [subscription_expires, userId]
     );
 
-    res.json({ message: "Subskrypcja została zmieniona" });
+    res.json({ message: "Subskrypcja zaktualizowana" });
   } catch (err) {
-    console.error("Błąd POST /admin/set-subscription:", err);
-    res.status(500).json({ error: "Błąd zmiany subskrypcji" });
+    console.error("Błąd subskrypcji:", err);
+    res.status(500).json({ error: "Błąd serwera" });
   }
 });
 
