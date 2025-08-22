@@ -8,18 +8,22 @@
 </head>
 <body>
   <div class="form-card">
-    <h1>📅 Dodaj rezerwację</h1>
+    <h1>➕ Dodaj rezerwację</h1>
     <form id="addBookingForm">
       <input type="text" id="guestName" placeholder="Imię i nazwisko gościa" required />
-      <input type="email" id="guestEmail" placeholder="Email gościa" />
-      <input type="tel" id="guestPhone" placeholder="Telefon gościa" />
-      <label>Data przyjazdu</label>
-      <input type="date" id="checkIn" required />
-      <label>Data wyjazdu</label>
-      <input type="date" id="checkOut" required />
-      <button type="submit">Dodaj rezerwację</button>
+      <input type="email" id="guestEmail" placeholder="Email gościa" required />
+      <label>Data od:</label>
+      <input type="date" id="startDate" required />
+      <label>Data do:</label>
+      <input type="date" id="endDate" required />
+      <select id="status" required>
+        <option value="confirmed">Potwierdzona</option>
+        <option value="pending">Oczekująca</option>
+        <option value="cancelled">Anulowana</option>
+      </select>
+      <button type="submit">Zapisz rezerwację</button>
     </form>
-    <a id="backLink" href="dashboard.html">⬅ Powrót</a>
+    <a id="backLink" href="#">⬅ Powrót</a>
   </div>
 
   <script>
@@ -28,25 +32,24 @@
       window.location.href = "login.html";
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomId = urlParams.get("room_id");
-    const propertyId = urlParams.get("property_id");
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("room_id");
 
-    if (!roomId || !propertyId) {
-      alert("Brak ID pokoju lub obiektu. Wejdź przez panel.");
+    if (!roomId) {
+      alert("Brak ID pokoju!");
       window.location.href = "dashboard.html";
     }
 
-    // Link powrotny do panelu obiektu
-    document.getElementById("backLink").href = `property-dashboard.html?property_id=${propertyId}`;
+    document.getElementById("backLink").href = `room-bookings.html?room_id=${roomId}`;
 
     document.getElementById("addBookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const guest_name = document.getElementById("guestName").value;
       const guest_email = document.getElementById("guestEmail").value;
-      const guest_phone = document.getElementById("guestPhone").value;
-      const check_in = document.getElementById("checkIn").value;
-      const check_out = document.getElementById("checkOut").value;
+      const start_date = document.getElementById("startDate").value;
+      const end_date = document.getElementById("endDate").value;
+      const status = document.getElementById("status").value;
 
       try {
         const res = await fetch(`/api/rooms/${roomId}/bookings`, {
@@ -55,12 +58,12 @@
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({ guest_name, guest_email, guest_phone, check_in, check_out })
+          body: JSON.stringify({ guest_name, guest_email, start_date, end_date, status })
         });
 
         if (!res.ok) throw new Error("Nie udało się dodać rezerwacji.");
-        alert("Rezerwacja dodana pomyślnie!");
-        window.location.href = `property-dashboard.html?property_id=${propertyId}`;
+        alert("✅ Rezerwacja dodana!");
+        window.location.href = `room-bookings.html?room_id=${roomId}`;
       } catch (err) {
         alert(err.message);
       }
