@@ -2,45 +2,60 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Panel administratora</title>
+  <title>Panel administratora - AWON</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>⚙️ Panel administratora</h1>
+  <div class="container">
+    <h1>Panel administratora</h1>
 
-  <div class="actions">
-    <input type="text" id="searchEmail" class="input" placeholder="🔍 Wyszukaj po e-mailu">
-    <button class="btn btn-primary" onclick="searchUsers()">Szukaj</button>
+    <!-- Wyszukiwanie użytkowników -->
+    <div class="search-bar">
+      <input type="text" id="searchEmail" placeholder="Szukaj po e-mailu">
+      <button onclick="searchUsers()" class="btn-secondary">🔍 Szukaj</button>
+    </div>
+
+    <!-- Tabela użytkowników -->
+    <h2>Lista użytkowników</h2>
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Rola</th>
+          <th>Data rejestracji</th>
+          <th>Ostatnie logowanie</th>
+          <th>Status</th>
+          <th>Subskrypcja</th>
+          <th>Opcje</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- Statystyki -->
+    <h2>Statystyki</h2>
+    <div id="stats">
+      <p><strong>Aktywne konta:</strong> <span id="activeUsers">0</span></p>
+      <p><strong>Nieaktywne konta:</strong> <span id="inactiveUsers">0</span></p>
+      <p><strong>Liczba rezerwacji:</strong> <span id="totalBookings">0</span></p>
+    </div>
   </div>
 
-  <h2>👥 Lista użytkowników</h2>
-  <table class="table" id="usersTable">
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Data rejestracji</th>
-        <th>Ostatnie logowanie</th>
-        <th>Status</th>
-        <th>Subskrypcja</th>
-        <th>Akcje</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h2>📊 Statystyki</h2>
-  <div id="stats" class="cards"></div>
-
   <script>
-    const API_ADMIN = "/admin";
+    const API_URL = "http://localhost:3000"; // zmień na backend (np. vercel)
     const token = localStorage.getItem("token");
 
+    if (!token) {
+      alert("Musisz być zalogowany!");
+      window.location.href = "login.html";
+    }
+
+    // Pobierz listę użytkowników
     async function loadUsers(query = "") {
-      const res = await fetch(`${API_ADMIN}/users?email=${query}`, {
+      const res = await fetch(`${API_URL}/admin/users?search=${query}`, {
         headers: { "Authorization": "Bearer " + token }
       });
       const users = await res.json();
-
       const tbody = document.querySelector("#usersTable tbody");
       tbody.innerHTML = "";
 
@@ -48,78 +63,77 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${u.email}</td>
+          <td>${u.role}</td>
           <td>${u.created_at || "-"}</td>
           <td>${u.last_login || "-"}</td>
-          <td>${u.is_active ? "✅ Aktywny" : "❌ Nieaktywny"}</td>
-          <td>${u.subscription_status || "Free"} (do ${u.subscription_expires || "-"})</td>
+          <td>${u.is_active ? "✅ aktywne" : "❌ zablokowane"}</td>
+          <td>${u.subscription_status || "darmowe"} (do ${u.subscription_expires || "-"})</td>
           <td>
-            <button class="btn btn-secondary" onclick="sendReset('${u.id}')">🔑 Reset hasła</button>
-            <button class="btn btn-primary" onclick="setNewPassword('${u.id}')">📝 Nadaj nowe</button>
-            <button class="btn btn-primary" onclick="editSubscription('${u.id}')">⭐ Subskrypcja</button>
+            <button onclick="resetPassword('${u.id}')" class="btn-secondary">🔑 Reset hasła</button>
+            <button onclick="setNewPassword('${u.id}')" class="btn-secondary">✏️ Nadaj hasło</button>
+            <button onclick="editSubscription('${u.id}')" class="btn-secondary">💳 Subskrypcja</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
+    // Pobierz statystyki
     async function loadStats() {
-      const res = await fetch(`${API_ADMIN}/stats`, {
+      const res = await fetch(`${API_URL}/admin/stats`, {
         headers: { "Authorization": "Bearer " + token }
       });
-      const s = await res.json();
-
-      const div = document.getElementById("stats");
-      div.innerHTML = `
-        <div class="card">👥 Użytkownicy: <strong>${s.total_users}</strong></div>
-        <div class="card">📅 Rezerwacje: <strong>${s.total_bookings}</strong></div>
-        <div class="card">✅ Aktywne konta: <strong>${s.active_users}</strong></div>
-        <div class="card">❌ Nieaktywne konta: <strong>${s.inactive_users}</strong></div>
-      `;
+      const stats = await res.json();
+      document.getElementById("activeUsers").textContent = stats.active_users;
+      document.getElementById("inactiveUsers").textContent = stats.inactive_users;
+      document.getElementById("totalBookings").textContent = stats.total_bookings;
     }
 
-    function searchUsers() {
-      const q = document.getElementById("searchEmail").value;
-      loadUsers(q);
-    }
-
-    async function sendReset(userId) {
-      if (!confirm("Wysłać link resetu hasła?")) return;
-      await fetch(`${API_ADMIN}/reset-password/${userId}`, {
+    // Funkcje akcji admina
+    async function resetPassword(userId) {
+      if (!confirm("Wysłać link resetujący do użytkownika?")) return;
+      const res = await fetch(`${API_URL}/admin/users/${userId}/reset-password`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + token }
       });
-      alert("Link resetu wysłany");
+      alert(res.ok ? "Wysłano link resetujący" : "Błąd resetu hasła");
     }
 
     async function setNewPassword(userId) {
-      const newPass = prompt("Podaj nowe hasło:");
+      const newPass = prompt("Podaj nowe hasło dla użytkownika:");
       if (!newPass) return;
-      await fetch(`${API_ADMIN}/set-password/${userId}`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}/set-password`, {
         method: "POST",
-        headers: { 
-          "Authorization": "Bearer " + token,
-          "Content-Type": "application/json"
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
         },
         body: JSON.stringify({ password: newPass })
       });
-      alert("Hasło ustawione");
+      alert(res.ok ? "Hasło ustawione" : "Błąd ustawiania hasła");
     }
 
     async function editSubscription(userId) {
-      const newDate = prompt("Podaj nową datę wygaśnięcia subskrypcji (YYYY-MM-DD):");
+      const newDate = prompt("Podaj nową datę ważności subskrypcji (YYYY-MM-DD):");
       if (!newDate) return;
-      await fetch(`${API_ADMIN}/set-subscription/${userId}`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}/subscription`, {
         method: "POST",
-        headers: { 
-          "Authorization": "Bearer " + token,
-          "Content-Type": "application/json"
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
         },
-        body: JSON.stringify({ expires: newDate })
+        body: JSON.stringify({ subscription_expires: newDate })
       });
-      alert("Subskrypcja zaktualizowana");
+      alert(res.ok ? "Subskrypcja zaktualizowana" : "Błąd aktualizacji subskrypcji");
       loadUsers();
     }
 
+    function searchUsers() {
+      const email = document.getElementById("searchEmail").value;
+      loadUsers(email);
+    }
+
+    // Załaduj dane na start
     loadUsers();
     loadStats();
   </script>
