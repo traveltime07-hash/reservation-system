@@ -1,30 +1,42 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import authRouter from "./routes/auth.js";
-import propertiesRouter from "./routes/properties.js";
-import roomsRouter from "./routes/rooms.js";
-import bookingsRouter from "./routes/bookings.js";  // ⬅ NOWY IMPORT
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+
+const authRoutes = require("./routes/auth");
+const propertiesRoutes = require("./routes/properties");
+const roomsRoutes = require("./routes/rooms");
+const bookingsRoutes = require("./routes/bookings");
+const adminRoutes = require("./routes/admin"); // 📌 NOWE
 
 const app = express();
-
 app.use(cors());
 app.use(bodyParser.json());
 
-// 🔑 logowanie/rejestracja
-app.use("/api/auth", authRouter);
+// Middleware: sprawdzanie tokena
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.sendStatus(401);
 
-// 🏠 obiekty
-app.use("/api/properties", propertiesRouter);
+  jwt.verify(token, process.env.JWT_SECRET || "secretkey", (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
 
-// 🛏 pokoje
-app.use("/api/rooms", roomsRouter);
+// Publiczne trasy
+app.use("/auth", authRoutes);
 
-// 📖 rezerwacje
-app.use("/api/bookings", bookingsRouter);   // ⬅ NOWY ROUTER
+// Prywatne trasy (wymagają tokena)
+app.use("/properties", authenticateToken, propertiesRoutes);
+app.use("/rooms", authenticateToken, roomsRoutes);
+app.use("/bookings", authenticateToken, bookingsRoutes);
+app.use("/admin", authenticateToken, adminRoutes); // 📌 NOWE
 
-// Serwer startuje
-const PORT = process.env.PORT || 5000;
+// Start serwera
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server działa na porcie ${PORT}`);
+  console.log(`✅ Server działa na porcie ${PORT}`);
 });
