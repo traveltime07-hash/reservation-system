@@ -24,6 +24,15 @@
       window.location.href = "login.html";
     }
 
+    // pobierz ID obiektu z adresu URL, np. add-room.html?property_id=1
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get("property_id");
+
+    if (!propertyId) {
+      alert("Brak ID obiektu. Wejdź przez panel.");
+      window.location.href = "dashboard.html";
+    }
+
     document.getElementById("addRoomForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("roomName").value;
@@ -31,7 +40,7 @@
       const description = document.getElementById("description").value;
 
       try {
-        const res = await fetch("/api/rooms", {
+        const res = await fetch(`/api/properties/${propertyId}/rooms`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
