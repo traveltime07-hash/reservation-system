@@ -9,6 +9,7 @@ import propertiesRouter from "./routes/properties.js";
 import roomsRouter from "./routes/rooms.js";
 import bookingsRouter from "./routes/bookings.js";
 import paymentsRouter from "./routes/payments.js";
+import usersRouter from "./routes/users.js";
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use("/api", propertiesRouter);
 app.use("/api", roomsRouter);
 app.use("/api", bookingsRouter);
 app.use("/api/payments", paymentsRouter);
+app.use("/api", usersRouter);
 
 // ✅ Debug env
 app.get("/api/debug-env", (req, res) => {
@@ -57,7 +59,7 @@ app.get("/api/debug-secret", (req, res) => {
   });
 });
 
-// ✅ Debug Supabase
+// ✅ Debug Supabase (MUSI być przed catch-all!)
 app.get("/api/debug-supabase", (req, res) => {
   res.json({
     url: process.env.SUPABASE_URL ? "OK" : "NOT FOUND",
@@ -69,8 +71,8 @@ app.get("/api/debug-supabase", (req, res) => {
 // ✅ Serwujemy pliki z folderu public
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ✅ Catch-all tylko dla frontendowych tras (NIE dla /api)
-app.get(/^\/(?!api).*/, (req, res) => {
+// ✅ Fix 404 – catch-all na frontend
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
