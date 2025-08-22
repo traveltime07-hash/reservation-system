@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel administratora</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>⚙️ Panel administratora</h1>
+
+  <div class="actions">
+    <input type="text" id="searchEmail" class="input" placeholder="🔍 Wyszukaj po e-mailu">
+    <button class="btn btn-primary" onclick="searchUsers()">Szukaj</button>
+  </div>
+
+  <h2>👥 Lista użytkowników</h2>
+  <table class="table" id="usersTable">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Data rejestracji</th>
+        <th>Ostatnie logowanie</th>
+        <th>Status</th>
+        <th>Subskrypcja</th>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>📊 Statystyki</h2>
+  <div id="stats" class="cards"></div>
+
+  <script>
+    const API_ADMIN = "/admin";
+    const token = localStorage.getItem("token");
+
+    async function loadUsers(query = "") {
+      const res = await fetch(`${API_ADMIN}/users?email=${query}`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const users = await res.json();
+
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = "";
+
+      users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.email}</td>
+          <td>${u.created_at || "-"}</td>
+          <td>${u.last_login || "-"}</td>
+          <td>${u.is_active ? "✅ Aktywny" : "❌ Nieaktywny"}</td>
+          <td>${u.subscription_status || "Free"} (do ${u.subscription_expires || "-"})</td>
+          <td>
+            <button class="btn btn-secondary" onclick="sendReset('${u.id}')">🔑 Reset hasła</button>
+            <button class="btn btn-primary" onclick="setNewPassword('${u.id}')">📝 Nadaj nowe</button>
+            <button class="btn btn-primary" onclick="editSubscription('${u.id}')">⭐ Subskrypcja</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadStats() {
+      const res = await fetch(`${API_ADMIN}/stats`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const s = await res.json();
+
+      const div = document.getElementById("stats");
+      div.innerHTML = `
+        <div class="card">👥 Użytkownicy: <strong>${s.total_users}</strong></div>
+        <div class="card">📅 Rezerwacje: <strong>${s.total_bookings}</strong></div>
+        <div class="card">✅ Aktywne konta: <strong>${s.active_users}</strong></div>
+        <div class="card">❌ Nieaktywne konta: <strong>${s.inactive_users}</strong></div>
+      `;
+    }
+
+    function searchUsers() {
+      const q = document.getElementById("searchEmail").value;
+      loadUsers(q);
+    }
+
+    async function sendReset(userId) {
+      if (!confirm("Wysłać link resetu hasła?")) return;
+      await fetch(`${API_ADMIN}/reset-password/${userId}`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      alert("Link resetu wysłany");
+    }
+
+    async function setNewPassword(userId) {
+      const newPass = prompt("Podaj nowe hasło:");
+      if (!newPass) return;
+      await fetch(`${API_ADMIN}/set-password/${userId}`, {
+        method: "POST",
+        headers: { 
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password: newPass })
+      });
+      alert("Hasło ustawione");
+    }
+
+    async function editSubscription(userId) {
+      const newDate = prompt("Podaj nową datę wygaśnięcia subskrypcji (YYYY-MM-DD):");
+      if (!newDate) return;
+      await fetch(`${API_ADMIN}/set-subscription/${userId}`, {
+        method: "POST",
+        headers: { 
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ expires: newDate })
+      });
+      alert("Subskrypcja zaktualizowana");
+      loadUsers();
+    }
+
+    loadUsers();
+    loadStats();
+  </script>
+</body>
+</html>
