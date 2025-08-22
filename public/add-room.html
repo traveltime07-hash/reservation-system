@@ -7,15 +7,14 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Dodaj pokój</h1>
+  <div class="form-card">
+    <h1>🛏️ Dodaj pokój</h1>
     <form id="addRoomForm">
-      <input type="text" id="name" placeholder="Nazwa pokoju" required>
-      <input type="number" id="capacity" placeholder="Liczba gości" required>
-      <textarea id="description" placeholder="Opis"></textarea>
+      <input type="text" id="roomName" placeholder="Nazwa pokoju" required />
+      <input type="number" id="capacity" placeholder="Ilość miejsc" required min="1" />
+      <textarea id="description" placeholder="Opis pokoju"></textarea>
       <button type="submit">Dodaj pokój</button>
     </form>
-    <p id="message"></p>
     <a href="dashboard.html">⬅ Powrót do panelu</a>
   </div>
 
@@ -27,28 +26,25 @@
 
     document.getElementById("addRoomForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      const newRoom = {
-        name: document.getElementById("name").value,
-        capacity: parseInt(document.getElementById("capacity").value),
-        description: document.getElementById("description").value
-      };
+      const name = document.getElementById("roomName").value;
+      const capacity = document.getElementById("capacity").value;
+      const description = document.getElementById("description").value;
 
       try {
         const res = await fetch("/api/rooms", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify(newRoom)
+          body: JSON.stringify({ name, capacity, description })
         });
 
-        if (!res.ok) throw new Error("Błąd przy dodawaniu pokoju.");
-        document.getElementById("message").innerText = "✅ Pokój został dodany!";
-        document.getElementById("addRoomForm").reset();
+        if (!res.ok) throw new Error("Nie udało się dodać pokoju.");
+        alert("Pokój dodany pomyślnie!");
+        window.location.href = "dashboard.html";
       } catch (err) {
-        document.getElementById("message").innerText = err.message;
+        alert(err.message);
       }
     });
   </script>
