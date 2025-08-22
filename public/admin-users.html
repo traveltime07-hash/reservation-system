@@ -2,69 +2,185 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel administratora - Użytkownicy</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background: #f4f4f4; }
+    .actions button { margin-right: 5px; }
+    .filter-box { margin-bottom: 15px; }
+  </style>
 </head>
 <body>
-  <h1>👤 Lista użytkowników</h1>
+  <h1>👤 Zarządzanie użytkownikami</h1>
 
-  <table border="1" cellpadding="8" cellspacing="0">
+  <div class="filter-box">
+    <input type="text" id="searchEmail" placeholder="Szukaj po e-mailu">
+    <select id="filterStatus">
+      <option value="">-- Status subskrypcji --</option>
+      <option value="free">Free</option>
+      <option value="premium">Premium</option>
+    </select>
+    <button onclick="loadUsers()">Filtruj</button>
+  </div>
+
+  <table>
     <thead>
       <tr>
         <th>ID</th>
-        <th>Email</th>
+        <th>E-mail</th>
         <th>Rola</th>
+        <th>Data rejestracji</th>
+        <th>Ostatnie logowanie</th>
+        <th>Status</th>
+        <th>Ważność subskrypcji</th>
         <th>Akcje</th>
       </tr>
     </thead>
-    <tbody id="users-table">
-      <tr><td colspan="4">Ładowanie...</td></tr>
-    </tbody>
+    <tbody id="usersTable"></tbody>
   </table>
 
+  <!-- Modal do ustawiania hasła -->
+  <div id="passwordModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5);">
+    <div style="background:#fff; padding:20px; width:300px; margin:100px auto; border-radius:8px;">
+      <h3>Ustaw nowe hasło</h3>
+      <input type="password" id="newPassword" placeholder="Nowe hasło"><br><br>
+      <button onclick="submitNewPassword()">Zapisz</button>
+      <button onclick="closeModal()">Anuluj</button>
+    </div>
+  </div>
+
+  <!-- Modal do edycji subskrypcji -->
+  <div id="subscriptionModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5);">
+    <div style="background:#fff; padding:20px; width:350px; margin:100px auto; border-radius:8px;">
+      <h3>Edycja subskrypcji</h3>
+      <label>Status:
+        <select id="subscriptionStatus">
+          <option value="free">Free</option>
+          <option value="premium">Premium</option>
+        </select>
+      </label><br><br>
+      <label>Ważność do:
+        <input type="date" id="subscriptionExpires">
+      </label><br><br>
+      <button onclick="submitSubscription()">Zapisz</button>
+      <button onclick="closeModal()">Anuluj</button>
+    </div>
+  </div>
+
   <script>
-    const token = localStorage.getItem("token");
+    const API_URL = "/admin";
+    let selectedUserId = null;
 
     async function loadUsers() {
-      const res = await fetch("/api/users", {
-        headers: { "Authorization": `Bearer ${token}` }
+      const email = document.getElementById("searchEmail").value;
+      const status = document.getElementById("filterStatus").value;
+
+      const token = localStorage.getItem("token");
+      let url = `${API_URL}/users?`;
+      if (email) url += `email=${encodeURIComponent(email)}&`;
+      if (status) url += `status=${encodeURIComponent(status)}`;
+
+      const res = await fetch(url, {
+        headers: { "Authorization": "Bearer " + token }
       });
-
       const users = await res.json();
-      const tbody = document.getElementById("users-table");
 
-      if (!Array.isArray(users)) {
-        tbody.innerHTML = `<tr><td colspan="4">❌ Błąd: ${users.error || "Nie udało się pobrać"}</td></tr>`;
-        return;
-      }
-
+      const tbody = document.getElementById("usersTable");
       tbody.innerHTML = "";
-      users.forEach(user => {
+      users.forEach(u => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${user.id}</td>
-          <td>${user.email}</td>
-          <td>${user.role}</td>
-          <td><button onclick="deleteUser(${user.id})">❌ Usuń</button></td>
+          <td>${u.id}</td>
+          <td>${u.email}</td>
+          <td>${u.role}</td>
+          <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : "-"}</td>
+          <td>${u.last_login ? new Date(u.last_login).toLocaleDateString() : "-"}</td>
+          <td>${u.subscription_status}</td>
+          <td>${u.subscription_expires ? new Date(u.subscription_expires).toLocaleDateString() : "-"}</td>
+          <td class="actions">
+            <button onclick="resetPassword(${u.id})">Reset hasła</button>
+            <button onclick="openPasswordModal(${u.id})">Ustaw hasło</button>
+            <button onclick="openSubscriptionModal(${u.id}, '${u.subscription_status}', '${u.subscription_expires || ""}')">Subskrypcja</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    async function deleteUser(id) {
-      if (!confirm("Czy na pewno chcesz usunąć tego użytkownika?")) return;
-
-      const res = await fetch(`/api/users/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+    async function resetPassword(id) {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/users/${id}/reset-password`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
       });
-
       const data = await res.json();
-      alert(data.message || "Operacja zakończona");
+      alert(data.message || "Link resetu wysłany");
+    }
+
+    function openPasswordModal(id) {
+      selectedUserId = id;
+      document.getElementById("passwordModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("passwordModal").style.display = "none";
+      document.getElementById("subscriptionModal").style.display = "none";
+      selectedUserId = null;
+    }
+
+    async function submitNewPassword() {
+      const newPassword = document.getElementById("newPassword").value;
+      if (!newPassword) return alert("Podaj hasło");
+
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/users/${selectedUserId}/set-password`, {
+        method: "POST",
+        headers: { 
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ newPassword })
+      });
+      const data = await res.json();
+      alert(data.message || "Hasło ustawione");
+      closeModal();
       loadUsers();
     }
 
+    function openSubscriptionModal(id, status, expires) {
+      selectedUserId = id;
+      document.getElementById("subscriptionStatus").value = status;
+      if (expires && expires !== "null") {
+        document.getElementById("subscriptionExpires").value = expires.split("T")[0];
+      } else {
+        document.getElementById("subscriptionExpires").value = "";
+      }
+      document.getElementById("subscriptionModal").style.display = "block";
+    }
+
+    async function submitSubscription() {
+      const subscription_status = document.getElementById("subscriptionStatus").value;
+      const subscription_expires = document.getElementById("subscriptionExpires").value;
+
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/users/${selectedUserId}/subscription`, {
+        method: "PUT",
+        headers: { 
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ subscription_status, subscription_expires })
+      });
+      const data = await res.json();
+      alert(data.message || "Subskrypcja zaktualizowana");
+      closeModal();
+      loadUsers();
+    }
+
+    // Autoładowanie
     loadUsers();
   </script>
 </body>
