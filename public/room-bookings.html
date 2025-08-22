@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rezerwacje pokoju</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard">
+    <h1>📅 Rezerwacje pokoju</h1>
+    <div id="roomInfo"></div>
+    <table border="1" cellpadding="5" cellspacing="0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Gość</th>
+          <th>Email</th>
+          <th>Od</th>
+          <th>Do</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="bookingsTable">
+        <tr><td colspan="6">⏳ Wczytywanie...</td></tr>
+      </tbody>
+    </table>
+    <br>
+    <a id="addBookingBtn" href="#">➕ Dodaj rezerwację</a>
+    <br><br>
+    <a href="dashboard.html">⬅ Powrót do panelu</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    // Pobieramy room_id z adresu (np. room-bookings.html?room_id=1)
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("room_id");
+
+    if (!roomId) {
+      alert("Brak ID pokoju!");
+      window.location.href = "dashboard.html";
+    }
+
+    document.getElementById("addBookingBtn").href = `add-booking.html?room_id=${roomId}`;
+
+    async function loadBookings() {
+      try {
+        const res = await fetch(`/api/rooms/${roomId}/bookings`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Błąd pobierania rezerwacji");
+        const bookings = await res.json();
+
+        const table = document.getElementById("bookingsTable");
+        table.innerHTML = "";
+
+        if (bookings.length === 0) {
+          table.innerHTML = "<tr><td colspan='6'>Brak rezerwacji dla tego pokoju.</td></tr>";
+          return;
+        }
+
+        bookings.forEach(b => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${b.id}</td>
+            <td>${b.guest_name}</td>
+            <td>${b.guest_email}</td>
+            <td>${new Date(b.start_date).toLocaleDateString()}</td>
+            <td>${new Date(b.end_date).toLocaleDateString()}</td>
+            <td>${b.status}</td>
+          `;
+          table.appendChild(tr);
+        });
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    loadBookings();
+  </script>
+</body>
+</html>
