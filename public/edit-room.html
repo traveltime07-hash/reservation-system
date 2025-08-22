@@ -1,64 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AWON – Edytuj pokój</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edytuj pokój</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="form-card">
-    <h1>AWON</h1>
-    <h2>Edytuj pokój</h2>
+  <div class="container">
+    <h1>Edytuj pokój</h1>
     <form id="editRoomForm">
-      <input type="text" id="name" placeholder="Nazwa pokoju" required />
-      <textarea id="description" placeholder="Opis pokoju (opcjonalnie)"></textarea>
+      <input type="text" id="name" placeholder="Nazwa pokoju" required>
+      <input type="number" id="capacity" placeholder="Liczba gości" required>
+      <textarea id="description" placeholder="Opis"></textarea>
       <button type="submit">Zapisz zmiany</button>
     </form>
-    <a href="/dashboard.html">← Powrót do panelu</a>
+    <p id="message"></p>
+    <a href="dashboard.html">⬅ Powrót do panelu</a>
   </div>
 
   <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    // Pobranie ID z query string (?id=...)
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get("id");
 
-    async function loadRoom() {
-      try {
-        const res = await fetch(`/api/rooms/${roomId}`);
-        if (!res.ok) throw new Error("Błąd pobierania danych pokoju");
-        const room = await res.json();
-        document.getElementById("name").value = room.name || "";
-        document.getElementById("description").value = room.description || "";
-      } catch (err) {
-        alert("Nie udało się pobrać danych pokoju.");
-      }
-    }
+    if (!roomId) {
+      document.getElementById("message").innerText = "Brak ID pokoju w adresie URL.";
+      document.getElementById("editRoomForm").style.display = "none";
+    } else {
+      // Pobranie danych pokoju
+      fetch(`/api/rooms/${roomId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Nie udało się pobrać danych pokoju.");
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById("name").value = data.name || "";
+        document.getElementById("capacity").value = data.capacity || 1;
+        document.getElementById("description").value = data.description || "";
+      })
+      .catch(err => {
+        document.getElementById("message").innerText = err.message;
+      });
 
-    document
-      .getElementById("editRoomForm")
-      .addEventListener("submit", async (e) => {
+      // Zapis zmian
+      document.getElementById("editRoomForm").addEventListener("submit", async (e) => {
         e.preventDefault();
+        const updated = {
+          name: document.getElementById("name").value,
+          capacity: parseInt(document.getElementById("capacity").value),
+          description: document.getElementById("description").value
+        };
+
         try {
           const res = await fetch(`/api/rooms/${roomId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: document.getElementById("name").value,
-              description: document.getElementById("description").value,
-            }),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(updated)
           });
-          if (res.ok) {
-            alert("Pokój został zaktualizowany!");
-            window.location.href = "/dashboard.html";
-          } else {
-            alert("Błąd zapisu zmian.");
-          }
+
+          if (!res.ok) throw new Error("Błąd przy zapisywaniu zmian.");
+          document.getElementById("message").innerText = "✅ Zapisano zmiany!";
         } catch (err) {
-          alert("Błąd połączenia z serwerem.");
+          document.getElementById("message").innerText = err.message;
         }
       });
-
-    loadRoom();
+    }
   </script>
 </body>
 </html>
