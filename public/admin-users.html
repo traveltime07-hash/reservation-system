@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel administratora - Użytkownicy</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>👤 Lista użytkowników</h1>
+
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Rola</th>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+    <tbody id="users-table">
+      <tr><td colspan="4">Ładowanie...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const token = localStorage.getItem("token");
+
+    async function loadUsers() {
+      const res = await fetch("/api/users", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      const users = await res.json();
+      const tbody = document.getElementById("users-table");
+
+      if (!Array.isArray(users)) {
+        tbody.innerHTML = `<tr><td colspan="4">❌ Błąd: ${users.error || "Nie udało się pobrać"}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      users.forEach(user => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.email}</td>
+          <td>${user.role}</td>
+          <td><button onclick="deleteUser(${user.id})">❌ Usuń</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Czy na pewno chcesz usunąć tego użytkownika?")) return;
+
+      const res = await fetch(`/api/users/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      alert(data.message || "Operacja zakończona");
+      loadUsers();
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
