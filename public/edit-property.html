@@ -11,71 +11,55 @@
     <h1>AWON</h1>
     <h2>Edytuj obiekt</h2>
     <form id="editPropertyForm">
-      <input type="hidden" id="propertyId" />
       <input type="text" id="name" placeholder="Nazwa obiektu" required />
+      <textarea id="description" placeholder="Opis obiektu" required></textarea>
       <input type="text" id="location" placeholder="Lokalizacja" required />
-      <textarea id="description" placeholder="Opis obiektu" rows="4" style="width:100%;margin:0.5rem 0;padding:0.75rem;border:1px solid #ccc;border-radius:0.5rem;"></textarea>
-      <input type="text" id="imageUrl" placeholder="URL zdjęcia" />
       <button type="submit">Zapisz zmiany</button>
     </form>
-    <a href="/dashboard.html">⬅ Wróć do panelu</a>
+    <a href="/dashboard.html">⬅ Powrót do panelu</a>
   </div>
 
   <script>
-    // Pobierz ID obiektu z parametru w URL (np. edit-property.html?id=5)
-    const urlParams = new URLSearchParams(window.location.search);
-    const propertyId = urlParams.get("id");
+    const params = new URLSearchParams(window.location.search);
+    const propertyId = params.get("id");
 
     if (!propertyId) {
-      alert("Brak ID obiektu w adresie!");
-      window.location.href = "/dashboard.html";
+      alert("Brak ID obiektu w adresie URL!");
     } else {
-      document.getElementById("propertyId").value = propertyId;
-      loadProperty();
-    }
-
-    async function loadProperty() {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/properties/${propertyId}`, {
-        headers: { "Authorization": "Bearer " + token }
-      });
-
-      if (res.ok) {
-        const property = await res.json();
-        document.getElementById("name").value = property.name;
-        document.getElementById("location").value = property.location;
-        document.getElementById("description").value = property.description || "";
-        document.getElementById("imageUrl").value = property.image_url || "";
-      } else {
-        alert("Nie udało się wczytać obiektu.");
-        window.location.href = "/dashboard.html";
-      }
+      fetch(`/api/properties/${propertyId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert("Nie udało się pobrać danych obiektu.");
+            return;
+          }
+          document.getElementById("name").value = data.name || "";
+          document.getElementById("description").value = data.description || "";
+          document.getElementById("location").value = data.location || "";
+        })
+        .catch(() => alert("Błąd połączenia z serwerem."));
     }
 
     document.getElementById("editPropertyForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const token = localStorage.getItem("token");
+
+      const payload = {
+        name: document.getElementById("name").value,
+        description: document.getElementById("description").value,
+        location: document.getElementById("location").value,
+      };
 
       const res = await fetch(`/api/properties/${propertyId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({
-          name: document.getElementById("name").value,
-          location: document.getElementById("location").value,
-          description: document.getElementById("description").value,
-          image_url: document.getElementById("imageUrl").value
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert("Zaktualizowano obiekt!");
+        alert("Zapisano zmiany!");
         window.location.href = "/dashboard.html";
       } else {
-        const err = await res.json();
-        alert("Błąd: " + err.message);
+        alert("Nie udało się zapisać zmian.");
       }
     });
   </script>
