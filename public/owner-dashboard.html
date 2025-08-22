@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel właściciela</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>🏡 Panel właściciela</h1>
+  <p id="welcome"></p>
+
+  <nav>
+    <ul>
+      <li><a href="add-property.html">➕ Dodaj obiekt</a></li>
+      <li><a href="edit-property.html">✏️ Edytuj obiekt</a></li>
+      <li><a href="add-room.html">🛏️ Dodaj pokój</a></li>
+      <li><a href="edit-room.html">✏️ Edytuj pokój</a></li>
+      <li><a href="bookings.html">📅 Zarządzaj rezerwacjami</a></li>
+      <li><a href="payments.html">💳 Płatności</a></li>
+    </ul>
+  </nav>
+
+  <button id="logout">🚪 Wyloguj się</button>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!token || !user) {
+      window.location.href = "login.html";
+    }
+
+    // ✅ Sprawdź czy to właściciel
+    if (user.role !== "owner") {
+      alert("Brak dostępu – to nie jest panel właściciela!");
+      window.location.href = "dashboard.html"; // wraca do głównego panelu
+    }
+
+    document.getElementById("welcome").textContent =
+      `Witaj, ${user.email} (Właściciel obiektu)`;
+
+    document.getElementById("logout").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>
