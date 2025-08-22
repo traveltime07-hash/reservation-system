@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   console.log("➡️ /register hit:", req.body);
 
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email i hasło są wymagane" });
@@ -25,10 +25,10 @@ router.post("/register", async (req, res) => {
     // Hashowanie hasła
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Wstaw nowego użytkownika
+    // Wstaw nowego użytkownika (domyślna rola = "client")
     const result = await pool.query(
-      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email",
-      [email, hashedPassword]
+      "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role",
+      [email, hashedPassword, role || "client"]
     );
 
     console.log("✅ Użytkownik zarejestrowany:", result.rows[0]);
@@ -66,14 +66,22 @@ router.post("/login", async (req, res) => {
 
     // Token JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     console.log("✅ Użytkownik zalogowany:", user.email);
 
-    res.json({ token, user: { id: user.id, email: user.email } });
+    // UWAGA → teraz zwracamy również `role`
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (err) {
     console.error("❌ Błąd w /login:", err);
     res.status(500).json({ error: err.message });
