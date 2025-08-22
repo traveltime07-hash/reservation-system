@@ -2,72 +2,189 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dodaj rezerwację</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { max-width: 600px; margin: auto; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; }
+    button { margin-top: 20px; padding: 10px 15px; }
+  </style>
 </head>
 <body>
-  <div class="form-card">
-    <h1>➕ Dodaj rezerwację</h1>
-    <form id="addBookingForm">
-      <input type="text" id="guestName" placeholder="Imię i nazwisko gościa" required />
-      <input type="email" id="guestEmail" placeholder="Email gościa" required />
-      <label>Data od:</label>
-      <input type="date" id="startDate" required />
-      <label>Data do:</label>
-      <input type="date" id="endDate" required />
-      <select id="status" required>
-        <option value="confirmed">Potwierdzona</option>
-        <option value="pending">Oczekująca</option>
-        <option value="cancelled">Anulowana</option>
-      </select>
-      <button type="submit">Zapisz rezerwację</button>
-    </form>
-    <a id="backLink" href="#">⬅ Powrót</a>
-  </div>
+  <h1>➕ Dodaj rezerwację</h1>
+
+  <form id="bookingForm">
+    <label>Obiekt:
+      <select id="propertySelect" required></select>
+    </label>
+
+    <label>Pokój:
+      <select id="roomSelect" required></select>
+    </label>
+
+    <label>Data początkowa:
+      <input type="date" id="startDate" required>
+    </label>
+
+    <label>Data końcowa:
+      <input type="date" id="endDate" required>
+    </label>
+
+    <h3>Dane klienta</h3>
+    <label>Imię i nazwisko:
+      <input type="text" id="guestName" required>
+    </label>
+    <label>Telefon:
+      <input type="text" id="guestPhone">
+    </label>
+    <label>Email:
+      <input type="email" id="guestEmail">
+    </label>
+
+    <h3>Szczegóły pobytu</h3>
+    <label>Liczba dorosłych:
+      <input type="number" id="adults" min="1" value="1">
+    </label>
+    <label>Liczba dzieci:
+      <input type="number" id="children" min="0" value="0">
+    </label>
+    <label>Zwierzęta:
+      <input type="checkbox" id="pets"> Tak
+    </label>
+
+    <h3>Płatności</h3>
+    <label>Cena całkowita:
+      <input type="number" id="totalPrice" step="0.01">
+    </label>
+    <label>Zadatek:
+      <input type="number" id="deposit" step="0.01" oninput="updateDueAmount()">
+    </label>
+    <label>Termin dopłaty:
+      <input type="date" id="dueDate">
+    </label>
+    <label>Dopłata (automatyczna):
+      <input type="number" id="remainingAmount" readonly>
+    </label>
+
+    <h3>Inne</h3>
+    <label>Notatki:
+      <textarea id="notes"></textarea>
+    </label>
+    <label>
+      <input type="checkbox" id="cleaningTask"> Wyślij informację o sprzątaniu
+    </label>
+    <label>
+      <input type="checkbox" id="safeReminder"> Powiadomić klienta o odbiorze kluczy z sejfu
+    </label>
+
+    <button type="submit">Zapisz rezerwację</button>
+  </form>
 
   <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "login.html";
+    const API_BOOKINGS = "/bookings";
+    const API_PROPERTIES = "/properties";
+    const API_ROOMS = "/rooms";
+    let roomsByProperty = {};
+
+    async function loadProperties() {
+      const token = localStorage.getItem("token");
+      const res = await fetch(API_PROPERTIES, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const properties = await res.json();
+      const select = document.getElementById("propertySelect");
+
+      select.innerHTML = "";
+      properties.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+
+      if (properties.length === 1) {
+        select.value = properties[0].id;
+        loadRooms(properties[0].id);
+      }
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const roomId = params.get("room_id");
+    async function loadRooms(propertyId) {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_ROOMS}?property_id=${propertyId}`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const rooms = await res.json();
+      roomsByProperty[propertyId] = rooms;
 
-    if (!roomId) {
-      alert("Brak ID pokoju!");
-      window.location.href = "dashboard.html";
+      const select = document.getElementById("roomSelect");
+      select.innerHTML = "";
+      rooms.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.id;
+        opt.textContent = r.name;
+        select.appendChild(opt);
+      });
+
+      if (rooms.length === 1) {
+        select.value = rooms[0].id;
+      }
     }
 
-    document.getElementById("backLink").href = `room-bookings.html?room_id=${roomId}`;
+    function updateDueAmount() {
+      const total = parseFloat(document.getElementById("totalPrice").value) || 0;
+      const deposit = parseFloat(document.getElementById("deposit").value) || 0;
+      document.getElementById("remainingAmount").value = Math.max(total - deposit, 0).toFixed(2);
+    }
 
-    document.getElementById("addBookingForm").addEventListener("submit", async (e) => {
+    document.getElementById("propertySelect").addEventListener("change", e => {
+      loadRooms(e.target.value);
+    });
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const guest_name = document.getElementById("guestName").value;
-      const guest_email = document.getElementById("guestEmail").value;
-      const start_date = document.getElementById("startDate").value;
-      const end_date = document.getElementById("endDate").value;
-      const status = document.getElementById("status").value;
+      const token = localStorage.getItem("token");
 
-      try {
-        const res = await fetch(`/api/rooms/${roomId}/bookings`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ guest_name, guest_email, start_date, end_date, status })
-        });
+      const data = {
+        room_id: document.getElementById("roomSelect").value,
+        guest_name: document.getElementById("guestName").value,
+        guest_phone: document.getElementById("guestPhone").value,
+        guest_email: document.getElementById("guestEmail").value,
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value,
+        adults: parseInt(document.getElementById("adults").value) || 1,
+        children: parseInt(document.getElementById("children").value) || 0,
+        pets: document.getElementById("pets").checked,
+        total_price: parseFloat(document.getElementById("totalPrice").value) || null,
+        deposit: parseFloat(document.getElementById("deposit").value) || null,
+        due_date: document.getElementById("dueDate").value || null,
+        notes: document.getElementById("notes").value,
+        cleaning_task: document.getElementById("cleaningTask").checked,
+        safe_reminder: document.getElementById("safeReminder").checked
+      };
 
-        if (!res.ok) throw new Error("Nie udało się dodać rezerwacji.");
-        alert("✅ Rezerwacja dodana!");
-        window.location.href = `room-bookings.html?room_id=${roomId}`;
-      } catch (err) {
-        alert(err.message);
+      const res = await fetch(API_BOOKINGS, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        alert("Rezerwacja dodana!");
+        window.location.href = "bookings.html";
+      } else {
+        const err = await res.json();
+        alert("Błąd: " + (err.error || "Nie udało się dodać rezerwacji"));
       }
     });
+
+    // Auto-ładowanie
+    loadProperties();
   </script>
 </body>
 </html>
