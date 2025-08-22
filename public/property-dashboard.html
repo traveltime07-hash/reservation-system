@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel obiektu</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="form-card">
+    <h1 id="propertyName">🏨 Obiekt</h1>
+    <nav>
+      <a href="dashboard.html">⬅ Powrót do listy obiektów</a> |
+      <a href="add-room.html">➕ Dodaj pokój</a>
+    </nav>
+    <h2>Pokoje</h2>
+    <div id="roomsList"></div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "login.html";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get("property_id");
+
+    if (!propertyId) {
+      alert("Brak ID obiektu. Wejdź przez panel.");
+      window.location.href = "dashboard.html";
+    }
+
+    async function loadProperty() {
+      const res = await fetch(`/api/properties/${propertyId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const property = await res.json();
+      document.getElementById("propertyName").innerText = `🏨 ${property.name}`;
+    }
+
+    async function loadRooms() {
+      const res = await fetch(`/api/properties/${propertyId}/rooms`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const rooms = await res.json();
+      const list = document.getElementById("roomsList");
+      list.innerHTML = "";
+      rooms.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "room-item";
+        div.innerHTML = `<strong>${r.name}</strong> (miejsca: ${r.capacity})<br>${r.description || ""}`;
+        list.appendChild(div);
+      });
+    }
+
+    loadProperty();
+    loadRooms();
+  </script>
+</body>
+</html>
