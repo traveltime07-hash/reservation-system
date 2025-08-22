@@ -3,51 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel użytkownika</title>
+  <title>Twoje obiekty</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>📊 Panel użytkownika</h1>
-  <p id="welcome"></p>
-
-  <nav>
-    <ul>
-      <li><a href="add-property.html">➕ Dodaj obiekt</a></li>
-      <li><a href="edit-property.html">✏️ Edytuj obiekt</a></li>
-      <li><a href="add-room.html">🛏️ Dodaj pokój</a></li>
-      <li><a href="edit-room.html">✏️ Edytuj pokój</a></li>
-      <li><a href="bookings.html">📅 Rezerwacje</a></li>
-      <li><a href="payments.html">💳 Płatności</a></li>
-      <!-- ✅ Link dla admina -->
-      <li id="admin-link" style="display: none;">
-        <a href="admin-users.html">👤 Zarządzaj użytkownikami</a>
-      </li>
-    </ul>
-  </nav>
-
-  <button id="logout">🚪 Wyloguj się</button>
+  <div class="form-card">
+    <h1>🏨 Twoje obiekty</h1>
+    <div id="propertiesList"></div>
+    <a href="login.html" onclick="localStorage.clear()">🚪 Wyloguj</a>
+  </div>
 
   <script>
     const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (!token || !user) {
+    if (!token) {
       window.location.href = "login.html";
     }
 
-    document.getElementById("welcome").textContent =
-      `Witaj, ${user.email} (${user.role})`;
+    async function loadProperties() {
+      try {
+        const res = await fetch("/api/properties", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Błąd ładowania obiektów");
+        const properties = await res.json();
 
-    // ✅ Pokaż link admina tylko dla roli admin
-    if (user.role === "admin") {
-      document.getElementById("admin-link").style.display = "block";
+        const list = document.getElementById("propertiesList");
+        list.innerHTML = "";
+
+        if (properties.length === 0) {
+          list.innerHTML = "<p>Nie masz jeszcze żadnych obiektów.</p>";
+          return;
+        }
+
+        properties.forEach(p => {
+          const div = document.createElement("div");
+          div.className = "property-item";
+          div.innerHTML = `
+            <h3>${p.name}</h3>
+            <p>${p.city}, ${p.street}</p>
+            <a href="property-dashboard.html?property_id=${p.id}">Wejdź do obiektu</a>
+          `;
+          list.appendChild(div);
+        });
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
-    document.getElementById("logout").addEventListener("click", () => {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "login.html";
-    });
+    loadProperties();
   </script>
 </body>
 </html>
