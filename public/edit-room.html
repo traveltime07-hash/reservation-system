@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>AWON – Edytuj pokój</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="form-card">
+    <h1>AWON</h1>
+    <h2>Edytuj pokój</h2>
+
+    <form id="editRoomForm">
+      <input type="text" id="name" placeholder="Nazwa pokoju" required />
+      <textarea id="description" placeholder="Opis pokoju"></textarea>
+      <input type="number" id="price" placeholder="Cena za noc (PLN)" required />
+      <input type="number" id="capacity" placeholder="Liczba miejsc" required />
+      <button type="submit">Zapisz zmiany</button>
+    </form>
+
+    <a id="backLink" href="/dashboard.html">⬅️ Powrót</a>
+  </div>
+
+  <script>
+    const form = document.getElementById("editRoomForm");
+
+    // Pobierz roomId i propertyId z query param
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get("id");
+    const propertyId = urlParams.get("propertyId");
+
+    if (!roomId || !propertyId) {
+      alert("Brak ID pokoju lub obiektu w adresie!");
+      window.location.href = "/dashboard.html";
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Musisz być zalogowany!");
+      window.location.href = "/login.html";
+    }
+
+    // Ustaw link powrotu
+    document.getElementById("backLink").href = `/edit-property.html?id=${propertyId}`;
+
+    // 🔹 Pobierz dane pokoju
+    async function loadRoom() {
+      try {
+        const res = await fetch(`/api/rooms/${roomId}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("name").value = data.name;
+          document.getElementById("description").value = data.description || "";
+          document.getElementById("price").value = data.price;
+          document.getElementById("capacity").value = data.capacity;
+        } else {
+          alert("Błąd pobierania: " + (data.error || "Nie udało się pobrać danych pokoju"));
+        }
+      } catch (err) {
+        alert("Błąd sieci: " + err.message);
+      }
+    }
+
+    loadRoom();
+
+    // 🔹 Zapisz zmiany
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const room = {
+        name: document.getElementById("name").value,
+        description: document.getElementById("description").value,
+        price: parseFloat(document.getElementById("price").value),
+        capacity: parseInt(document.getElementById("capacity").value),
+      };
+
+      try {
+        const res = await fetch(`/api/rooms/${roomId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(room),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("Zmiany zapisane!");
+          window.location.href = `/edit-property.html?id=${propertyId}`;
+        } else {
+          alert("Błąd: " + (data.error || "Nie udało się zapisać zmian"));
+        }
+      } catch (err) {
+        alert("Błąd sieci: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
