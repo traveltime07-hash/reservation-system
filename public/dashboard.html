@@ -2,35 +2,52 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel użytkownika</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>📌 Panel administratora</h1>
+  <h1>📊 Panel użytkownika</h1>
+  <p id="welcome"></p>
 
   <nav>
     <ul>
-      <li><a href="users.html">👤 Lista użytkowników</a></li>
-      <li><a href="all-reservations.html">📅 Wszystkie rezerwacje</a></li>
-      <li><a href="reports.html">📊 Raporty</a></li>
-      <li><a href="add-property.html">🏡 Dodaj obiekt</a></li>
+      <li><a href="add-property.html">➕ Dodaj obiekt</a></li>
       <li><a href="edit-property.html">✏️ Edytuj obiekt</a></li>
       <li><a href="add-room.html">🛏️ Dodaj pokój</a></li>
       <li><a href="edit-room.html">✏️ Edytuj pokój</a></li>
       <li><a href="bookings.html">📅 Rezerwacje</a></li>
       <li><a href="payments.html">💳 Płatności</a></li>
-      <li><a href="login.html">🚪 Wyloguj</a></li>
+      <!-- ✅ Link dla admina -->
+      <li id="admin-link" style="display: none;">
+        <a href="admin-users.html">👤 Zarządzaj użytkownikami</a>
+      </li>
     </ul>
   </nav>
 
+  <button id="logout">🚪 Wyloguj się</button>
+
   <script>
-    // Sprawdzenie, czy użytkownik jest zalogowany
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Musisz być zalogowany!");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!token || !user) {
       window.location.href = "login.html";
     }
+
+    document.getElementById("welcome").textContent =
+      `Witaj, ${user.email} (${user.role})`;
+
+    // ✅ Pokaż link admina tylko dla roli admin
+    if (user.role === "admin") {
+      document.getElementById("admin-link").style.display = "block";
+    }
+
+    document.getElementById("logout").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    });
   </script>
 </body>
 </html>
