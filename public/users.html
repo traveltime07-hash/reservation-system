@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Użytkownicy - Panel admina</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+</head>
+<body>
+  <h1>👤 Lista użytkowników</h1>
+  <table border="1" cellpadding="5">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Rola</th>
+      </tr>
+    </thead>
+    <tbody id="usersTable"></tbody>
+  </table>
+
+  <script>
+    async function loadUsers() {
+      const { data, error } = await supabase.from("users").select("id, email, role");
+      if (error) {
+        console.error(error);
+        return;
+      }
+      const tbody = document.getElementById("usersTable");
+      tbody.innerHTML = "";
+      data.forEach(user => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${user.id}</td><td>${user.email}</td><td>${user.role}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    loadUsers();
+  </script>
+</body>
+</html>
