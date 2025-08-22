@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWON - Zarządzanie użytkownikami</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>👤 Zarządzanie użytkownikami</h1>
+    <nav>
+      <a href="dashboard.html">⬅️ Powrót do dashboardu</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Lista użytkowników</h2>
+      <div id="users-list">
+        <p>Ładowanie użytkowników...</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!token || !user) {
+      window.location.href = "login.html";
+    }
+
+    // ✅ Tylko admin ma dostęp
+    if (user.role !== "admin") {
+      alert("Brak dostępu!");
+      window.location.href = "dashboard.html";
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch("/api/admin/users", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        const usersDiv = document.getElementById("users-list");
+        usersDiv.innerHTML = "";
+
+        if (data.length === 0) {
+          usersDiv.innerHTML = "<p>Brak użytkowników.</p>";
+        } else {
+          data.forEach(u => {
+            const el = document.createElement("div");
+            el.style.border = "1px solid #ccc";
+            el.style.margin = "5px";
+            el.style.padding = "10px";
+            el.innerHTML = `
+              <strong>${u.email}</strong> (rola: ${u.role})<br>
+              <button onclick="changeRole(${u.id}, 'user')">Ustaw jako User</button>
+              <button onclick="changeRole(${u.id}, 'admin')">Ustaw jako Admin</button>
+              <button onclick="deleteUser(${u.id})" style="color:red;">Usuń</button>
+            `;
+            usersDiv.appendChild(el);
+          });
+        }
+      } catch (err) {
+        document.getElementById("users-list").innerHTML = "<p>Błąd pobierania użytkowników.</p>";
+      }
+    }
+
+    async function changeRole(id, role) {
+      if (!confirm(`Czy na pewno zmienić rolę użytkownika ${id} na ${role}?`)) return;
+      await fetch(`/api/admin/users/${id}/role`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ role })
+      });
+      loadUsers();
+    }
+
+    async function deleteUser(id) {
+      if (!confirm(`Czy na pewno usunąć użytkownika ${id}?`)) return;
+      await fetch(`/api/admin/users/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      loadUsers();
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
