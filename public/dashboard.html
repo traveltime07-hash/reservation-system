@@ -1,57 +1,92 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AWON – Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AWON - Dashboard</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <header class="hero">
-    <h1>AWON – Panel użytkownika</h1>
-    <p>Zarządzaj swoimi obiektami i rezerwacjami</p>
-    <a href="/logout.html" class="btn-secondary">Wyloguj się</a>
+  <header>
+    <h1>Witaj w AWON!</h1>
+    <button id="logoutBtn">Wyloguj się</button>
   </header>
 
-  <main class="container">
-    <!-- 📌 Sekcja subskrypcji -->
+  <main>
     <section>
-      <h2>Moja subskrypcja</h2>
-      <div class="form-card">
-        <h3>Status: <span style="color:green;">Aktywna</span></h3>
-        <p>Ważna do: <strong>2025-12-31</strong></p>
-        <button>Przedłuż subskrypcję</button>
+      <h2>Twoje konto</h2>
+      <p>Email: <span id="user-email"></span></p>
+      <p>Rola: <span id="user-role"></span></p>
+    </section>
+
+    <section>
+      <h2>Twoje rezerwacje</h2>
+      <div id="bookings-list">
+        <p>Ładowanie rezerwacji...</p>
       </div>
     </section>
 
-    <!-- 📌 Sekcja statystyk -->
-    <section>
-      <h2>Statystyki</h2>
-      <div class="stats">
-        <div class="stat-box">
-          <h3>Obiekty</h3>
-          <p>2</p>
-        </div>
-        <div class="stat-box">
-          <h3>Pokoje</h3>
-          <p>8</p>
-        </div>
-        <div class="stat-box">
-          <h3>Rezerwacje</h3>
-          <p>14</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 📌 Sekcja kalendarza -->
-    <section>
-      <h2>Kalendarz</h2>
-      <p>(Wkrótce pojawi się tutaj kalendarz rezerwacji)</p>
+    <!-- ✅ Panel administratora -->
+    <section id="admin-panel" style="display:none; margin-top: 30px; border-top: 2px solid #ccc; padding-top: 20px;">
+      <h2>⚙️ Panel administratora</h2>
+      <ul>
+        <li><a href="manage-users.html">👤 Zarządzanie użytkownikami</a></li>
+        <li><a href="all-bookings.html">📅 Wszystkie rezerwacje</a></li>
+        <li><a href="reports.html">📊 Raporty</a></li>
+      </ul>
     </section>
   </main>
 
-  <footer>
-    <p>© 2025 AWON – Asystent Właściciela Obiektów Noclegowych</p>
-  </footer>
+  <script>
+    // Sprawdzenie zalogowanego użytkownika
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!token || !user) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("user-email").textContent = user.email;
+    document.getElementById("user-role").textContent = user.role;
+
+    // ✅ Jeśli admin -> pokaż panel
+    if (user.role === "admin") {
+      document.getElementById("admin-panel").style.display = "block";
+    }
+
+    // Obsługa wylogowania
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    });
+
+    // Pobranie rezerwacji użytkownika
+    async function loadBookings() {
+      try {
+        const res = await fetch("/api/bookings", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        const bookingsDiv = document.getElementById("bookings-list");
+        bookingsDiv.innerHTML = "";
+
+        if (data.length === 0) {
+          bookingsDiv.innerHTML = "<p>Brak rezerwacji.</p>";
+        } else {
+          data.forEach(b => {
+            const el = document.createElement("div");
+            el.textContent = `Rezerwacja ID: ${b.id}, Pokój: ${b.room_id}, Od: ${b.start_date}, Do: ${b.end_date}`;
+            bookingsDiv.appendChild(el);
+          });
+        }
+      } catch (err) {
+        document.getElementById("bookings-list").innerHTML = "<p>Błąd pobierania rezerwacji.</p>";
+      }
+    }
+
+    loadBookings();
+  </script>
 </body>
 </html>
