@@ -2,55 +2,199 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista rezerwacji</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+    .filters { margin-bottom: 15px; }
+    .filters input, .filters select { margin-right: 10px; padding: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background: #f4f4f4; }
+    .calendar { margin-top: 30px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .day { border: 1px solid #ccc; padding: 10px; text-align: center; min-height: 60px; position: relative; }
+    .free { background: #d4edda; }     /* zielony */
+    .booked { background: #f8d7da; }   /* czerwony */
+    .online { background: #cce5ff; }   /* niebieski */
+    .departure::after { content: "\\"; position: absolute; top: 0; right: 0; color: #000; }
+    .same-day { background: linear-gradient(to bottom, #cce5ff 50%, #d4edda 50%); }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📅 Lista rezerwacji</h1>
-    <p id="message">Ładowanie rezerwacji...</p>
-    <div id="bookingsList"></div>
-    <a href="dashboard.html">⬅ Powrót do panelu</a>
+  <h1>📅 Rezerwacje</h1>
+
+  <div class="filters">
+    <label>Obiekt:
+      <select id="propertyFilter"></select>
+    </label>
+    <label>Pokój:
+      <select id="roomFilter"></select>
+    </label>
+    <label>Od:
+      <input type="date" id="startDateFilter">
+    </label>
+    <label>Do:
+      <input type="date" id="endDateFilter">
+    </label>
+    <button onclick="loadBookings()">Filtruj</button>
+    <button onclick="window.location.href='add-booking.html'">+ Dodaj rezerwację</button>
   </div>
 
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Obiekt</th>
+        <th>Pokój</th>
+        <th>Gość</th>
+        <th>Telefon</th>
+        <th>Email</th>
+        <th>Od</th>
+        <th>Do</th>
+        <th>Dorośli</th>
+        <th>Dzieci</th>
+        <th>Zwierzęta</th>
+        <th>Cena</th>
+        <th>Notatki</th>
+      </tr>
+    </thead>
+    <tbody id="bookingsTable"></tbody>
+  </table>
+
+  <h2>Kalendarz</h2>
+  <div id="calendar" class="calendar"></div>
+
   <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "login.html";
+    const API_BOOKINGS = "/bookings";
+    const API_PROPERTIES = "/properties";
+    const API_ROOMS = "/rooms";
+
+    async function loadProperties() {
+      const token = localStorage.getItem("token");
+      const res = await fetch(API_PROPERTIES, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const properties = await res.json();
+      const select = document.getElementById("propertyFilter");
+
+      select.innerHTML = "<option value=''>-- wszystkie --</option>";
+      properties.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
     }
 
+    async function loadRooms(propertyId) {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_ROOMS}?property_id=${propertyId}`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const rooms = await res.json();
+      const select = document.getElementById("roomFilter");
+      select.innerHTML = "<option value=''>-- wszystkie --</option>";
+      rooms.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.id;
+        opt.textContent = r.name;
+        select.appendChild(opt);
+      });
+    }
+
+    document.getElementById("propertyFilter").addEventListener("change", e => {
+      if (e.target.value) {
+        loadRooms(e.target.value);
+      } else {
+        document.getElementById("roomFilter").innerHTML = "<option value=''>-- wszystkie --</option>";
+      }
+    });
+
     async function loadBookings() {
-      try {
-        const res = await fetch("/api/bookings", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("Nie udało się pobrać listy rezerwacji.");
+      const token = localStorage.getItem("token");
+      const property = document.getElementById("propertyFilter").value;
+      const room = document.getElementById("roomFilter").value;
+      const start = document.getElementById("startDateFilter").value;
+      const end = document.getElementById("endDateFilter").value;
 
-        const bookings = await res.json();
-        const listDiv = document.getElementById("bookingsList");
-        document.getElementById("message").innerText = "";
+      let url = `${API_BOOKINGS}?`;
+      if (property) url += `property_id=${property}&`;
+      if (room) url += `room_id=${room}&`;
+      if (start) url += `start_date=${start}&`;
+      if (end) url += `end_date=${end}`;
 
-        if (bookings.length === 0) {
-          listDiv.innerHTML = "<p>Brak rezerwacji.</p>";
-          return;
+      const res = await fetch(url, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const bookings = await res.json();
+
+      const tbody = document.getElementById("bookingsTable");
+      tbody.innerHTML = "";
+      bookings.forEach(b => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${b.id}</td>
+          <td>${b.property_name}</td>
+          <td>${b.room_name}</td>
+          <td>${b.guest_name || "-"}</td>
+          <td>${b.guest_phone || "-"}</td>
+          <td>${b.guest_email || "-"}</td>
+          <td>${b.start_date}</td>
+          <td>${b.end_date}</td>
+          <td>${b.adults}</td>
+          <td>${b.children}</td>
+          <td>${b.pets ? "🐾" : "-"}</td>
+          <td>${b.total_price || "-"}</td>
+          <td>${b.notes || "-"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderCalendar(bookings);
+    }
+
+    function renderCalendar(bookings) {
+      const calendarDiv = document.getElementById("calendar");
+      calendarDiv.innerHTML = "";
+
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth(); // bieżący miesiąc
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      const daysInMonth = lastDay.getDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        const div = document.createElement("div");
+        div.classList.add("day");
+        div.textContent = d;
+
+        // sprawdzamy rezerwacje
+        const booking = bookings.find(b => b.start_date <= dateStr && b.end_date >= dateStr);
+        if (booking) {
+          if (booking.notes && booking.notes.toLowerCase().includes("booking")) {
+            div.classList.add("online"); // rezerwacja online
+          } else {
+            div.classList.add("booked");
+          }
+          if (booking.end_date === dateStr) {
+            div.classList.add("departure");
+          }
+          if (booking.start_date === booking.end_date && booking.start_date === dateStr) {
+            div.classList.add("same-day");
+          }
+        } else {
+          div.classList.add("free");
         }
 
-        listDiv.innerHTML = bookings.map(b => `
-          <div class="form-card" style="margin-bottom: 1rem; text-align: left;">
-            <h3>🏠 Obiekt: ${b.property_name || "Nieznany"}</h3>
-            <p><strong>Pokój:</strong> ${b.room_name || "Nieznany"}</p>
-            <p><strong>Gość:</strong> ${b.guest_name || "Brak danych"}</p>
-            <p><strong>Od:</strong> ${new Date(b.start_date).toLocaleDateString("pl-PL")} 
-               <strong>Do:</strong> ${new Date(b.end_date).toLocaleDateString("pl-PL")}</p>
-          </div>
-        `).join("");
-      } catch (err) {
-        document.getElementById("message").innerText = err.message;
+        calendarDiv.appendChild(div);
       }
     }
 
-    loadBookings();
+    // Auto-ładowanie
+    loadProperties().then(loadBookings);
   </script>
 </body>
 </html>
