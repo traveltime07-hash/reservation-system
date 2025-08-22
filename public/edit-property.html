@@ -1,103 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AWON – Edytuj obiekt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edytuj obiekt</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="form-card">
-    <h1>AWON</h1>
-    <h2>Edytuj obiekt</h2>
-
+  <div class="container">
+    <h1>Edytuj obiekt</h1>
     <form id="editPropertyForm">
-      <input type="text" id="name" placeholder="Nazwa obiektu" required />
-      <textarea id="description" placeholder="Opis obiektu"></textarea>
-      <input type="text" id="address" placeholder="Adres" required />
-      <input type="text" id="city" placeholder="Miasto" required />
-      <input type="text" id="country" placeholder="Kraj" required />
+      <input type="text" id="name" placeholder="Nazwa obiektu" required>
+      <input type="text" id="address" placeholder="Adres" required>
+      <textarea id="description" placeholder="Opis"></textarea>
       <button type="submit">Zapisz zmiany</button>
     </form>
-
-    <a href="/dashboard.html">⬅️ Powrót do panelu</a>
+    <p id="message"></p>
+    <a href="dashboard.html">⬅ Powrót do panelu</a>
   </div>
 
   <script>
-    const form = document.getElementById("editPropertyForm");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
 
-    // Pobierz ID obiektu z query param ?id=123
+    // Pobranie ID z query string (?id=...)
     const urlParams = new URLSearchParams(window.location.search);
     const propertyId = urlParams.get("id");
 
     if (!propertyId) {
-      alert("Brak ID obiektu w adresie!");
-      window.location.href = "/dashboard.html";
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Musisz być zalogowany!");
-      window.location.href = "/login.html";
-    }
-
-    // 🔹 Pobierz dane obiektu do edycji
-    async function loadProperty() {
-      try {
-        const res = await fetch(`/api/properties/${propertyId}`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Błąd ładowania obiektu");
-
+      document.getElementById("message").innerText = "Brak ID obiektu w adresie URL.";
+      document.getElementById("editPropertyForm").style.display = "none";
+    } else {
+      // Pobranie danych obiektu
+      fetch(`/api/properties/${propertyId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Nie udało się pobrać danych obiektu.");
+        return res.json();
+      })
+      .then(data => {
         document.getElementById("name").value = data.name || "";
-        document.getElementById("description").value = data.description || "";
         document.getElementById("address").value = data.address || "";
-        document.getElementById("city").value = data.city || "";
-        document.getElementById("country").value = data.country || "";
+        document.getElementById("description").value = data.description || "";
+      })
+      .catch(err => {
+        document.getElementById("message").innerText = err.message;
+      });
 
-      } catch (err) {
-        alert("Nie udało się pobrać danych obiektu: " + err.message);
-        window.location.href = "/dashboard.html";
-      }
-    }
+      // Zapis zmian
+      document.getElementById("editPropertyForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const updated = {
+          name: document.getElementById("name").value,
+          address: document.getElementById("address").value,
+          description: document.getElementById("description").value
+        };
 
-    loadProperty();
+        try {
+          const res = await fetch(`/api/properties/${propertyId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(updated)
+          });
 
-    // 🔹 Zapisz zmiany
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const updated = {
-        name: document.getElementById("name").value,
-        description: document.getElementById("description").value,
-        address: document.getElementById("address").value,
-        city: document.getElementById("city").value,
-        country: document.getElementById("country").value,
-      };
-
-      try {
-        const res = await fetch(`/api/properties/${propertyId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-          body: JSON.stringify(updated),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          alert("Zmiany zapisane!");
-          window.location.href = "/dashboard.html";
-        } else {
-          alert("Błąd: " + (data.error || "Nie udało się zapisać zmian"));
+          if (!res.ok) throw new Error("Błąd przy zapisywaniu zmian.");
+          document.getElementById("message").innerText = "✅ Zapisano zmiany!";
+        } catch (err) {
+          document.getElementById("message").innerText = err.message;
         }
-      } catch (err) {
-        alert("Błąd sieci: " + err.message);
-      }
-    });
+      });
+    }
   </script>
 </body>
 </html>
