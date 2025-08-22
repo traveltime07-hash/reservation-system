@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Raporty - Panel admina</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+</head>
+<body>
+  <h1>📊 Raport: liczba rezerwacji per użytkownik</h1>
+  <table border="1" cellpadding="5">
+    <thead>
+      <tr>
+        <th>Użytkownik</th>
+        <th>Liczba rezerwacji</th>
+      </tr>
+    </thead>
+    <tbody id="reportsTable"></tbody>
+  </table>
+
+  <script>
+    async function loadReports() {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("user_id", { count: "exact" });
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      // grupowanie rezerwacji per użytkownik
+      const counts = {};
+      data.forEach(b => {
+        counts[b.user_id] = (counts[b.user_id] || 0) + 1;
+      });
+
+      const tbody = document.getElementById("reportsTable");
+      tbody.innerHTML = "";
+      Object.entries(counts).forEach(([user, total]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${user}</td><td>${total}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    loadReports();
+  </script>
+</body>
+</html>
