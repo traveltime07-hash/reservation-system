@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Rezerwacji</title>
+</head>
+<body>
+  <h1>Dodaj rezerwację</h1>
+  <form id="bookingForm">
+    <input type="number" id="property_id" placeholder="ID obiektu" required><br>
+    <input type="number" id="room_id" placeholder="ID pokoju" required><br>
+    <input type="text" id="guest_name" placeholder="Imię i nazwisko" required><br>
+    <input type="email" id="guest_email" placeholder="Email" required><br>
+    <input type="date" id="start_date" required><br>
+    <input type="date" id="end_date" required><br>
+    <select id="status">
+      <option value="confirmed">Potwierdzona</option>
+      <option value="pending">Oczekująca</option>
+      <option value="cancelled">Anulowana</option>
+    </select><br>
+    <button type="submit">Dodaj rezerwację</button>
+  </form>
+
+  <script>
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        property_id: document.getElementById("property_id").value,
+        room_id: document.getElementById("room_id").value,
+        guest_name: document.getElementById("guest_name").value,
+        guest_email: document.getElementById("guest_email").value,
+        start_date: document.getElementById("start_date").value,
+        end_date: document.getElementById("end_date").value,
+        status: document.getElementById("status").value,
+      };
+
+      try {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+        alert("Dodano rezerwację: " + JSON.stringify(result));
+      } catch (err) {
+        alert("Błąd: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
