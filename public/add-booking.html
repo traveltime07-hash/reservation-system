@@ -2,181 +2,160 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Dodaj rezerwację</title>
+  <title>Dodaj rezerwację - AWON</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>➕ Dodaj rezerwację</h1>
+  <div class="container">
+    <h1>Dodaj rezerwację</h1>
 
-  <form id="addBookingForm" class="form">
-    <label>Obiekt:
-      <select id="propertySelect" class="input" required></select>
-    </label>
+    <form id="addBookingForm">
+      <!-- Wybór obiektu -->
+      <label for="property_id">Obiekt:</label>
+      <select id="property_id" required></select>
 
-    <label>Pokój:
-      <select id="roomSelect" class="input" required></select>
-    </label>
+      <!-- Wybór pokoju -->
+      <label for="room_id">Pokój:</label>
+      <select id="room_id" required></select>
 
-    <label>Data początkowa:
-      <input type="date" id="startDate" class="input" required>
-    </label>
+      <!-- Dane klienta -->
+      <label for="guest_name">Imię i nazwisko:</label>
+      <input type="text" id="guest_name" required>
 
-    <label>Data końcowa:
-      <input type="date" id="endDate" class="input" required>
-    </label>
+      <label for="guest_phone">Telefon:</label>
+      <input type="text" id="guest_phone">
 
-    <h3>Dane klienta</h3>
-    <label>Imię i nazwisko:
-      <input type="text" id="guestName" class="input" required>
-    </label>
-    <label>Telefon:
-      <input type="text" id="guestPhone" class="input">
-    </label>
-    <label>Email:
-      <input type="email" id="guestEmail" class="input">
-    </label>
+      <label for="guest_email">E-mail:</label>
+      <input type="email" id="guest_email">
 
-    <h3>Szczegóły pobytu</h3>
-    <label>Dorośli:
-      <input type="number" id="adults" class="input" value="1" min="1">
-    </label>
-    <label>Dzieci:
-      <input type="number" id="children" class="input" value="0" min="0">
-    </label>
-    <label>
-      <input type="checkbox" id="pets"> Zwierzęta
-    </label>
+      <!-- Daty -->
+      <label for="start_date">Data przyjazdu:</label>
+      <input type="date" id="start_date" required>
 
-    <h3>Płatności</h3>
-    <label>Cena całkowita:
-      <input type="number" id="totalPrice" class="input" step="0.01">
-    </label>
-    <label>Zadatek:
-      <input type="number" id="deposit" class="input" step="0.01" oninput="updateRemaining()">
-    </label>
-    <label>Termin dopłaty:
-      <input type="date" id="dueDate" class="input">
-    </label>
-    <label>Dopłata (automatyczna):
-      <input type="number" id="remainingAmount" class="input" readonly>
-    </label>
+      <label for="end_date">Data wyjazdu:</label>
+      <input type="date" id="end_date" required>
 
-    <h3>Inne</h3>
-    <label>Notatki:
-      <textarea id="notes" class="input"></textarea>
-    </label>
-    <label>
-      <input type="checkbox" id="cleaningTask"> Sprzątanie
-    </label>
-    <label>
-      <input type="checkbox" id="safeReminder"> Sejf z kluczami
-    </label>
+      <!-- Szczegóły pobytu -->
+      <label for="adults">Dorośli:</label>
+      <input type="number" id="adults" value="1" min="1">
 
-    <div class="actions">
-      <button type="submit" class="btn btn-primary">💾 Zapisz</button>
-      <button type="button" class="btn btn-secondary" onclick="window.location.href='bookings.html'">⬅ Powrót</button>
-    </div>
-  </form>
+      <label for="children">Dzieci:</label>
+      <input type="number" id="children" value="0" min="0">
+
+      <label for="pets">Zwierzęta:</label>
+      <input type="checkbox" id="pets">
+
+      <!-- Finanse -->
+      <label for="total_price">Cena całkowita:</label>
+      <input type="number" id="total_price" step="0.01">
+
+      <label for="deposit">Zadatek:</label>
+      <input type="number" id="deposit" step="0.01">
+
+      <label for="due_date">Termin dopłaty:</label>
+      <input type="date" id="due_date">
+
+      <!-- Notatki -->
+      <label for="notes">Notatki:</label>
+      <textarea id="notes"></textarea>
+
+      <!-- Parafki -->
+      <label>
+        <input type="checkbox" id="cleaning_task"> Wyślij informację o sprzątaniu
+      </label>
+      <label>
+        <input type="checkbox" id="safe_reminder"> Powiadomić klienta o odbiorze kluczy z sejfu
+      </label>
+
+      <button type="submit" class="btn-primary">Zapisz rezerwację</button>
+    </form>
+  </div>
 
   <script>
-    const API_PROPERTIES = "/properties";
-    const API_ROOMS = "/rooms";
-    const API_BOOKINGS = "/bookings";
-    const token = localStorage.getItem("token");
+    const API_URL = "http://localhost:3000"; // zmień na swój backend (np. vercel)
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Musisz być zalogowany!");
+      window.location.href = "login.html";
+    }
+
+    // Pobierz obiekty
     async function loadProperties() {
-      const res = await fetch(API_PROPERTIES, {
+      const res = await fetch(`${API_URL}/properties`, {
         headers: { "Authorization": "Bearer " + token }
       });
       const properties = await res.json();
-      const select = document.getElementById("propertySelect");
-
-      if (properties.length === 0) {
-        alert("Najpierw dodaj obiekt.");
-        window.location.href = "add-property.html";
-        return;
-      }
-
-      select.innerHTML = "";
+      const select = document.getElementById("property_id");
       properties.forEach(p => {
         const opt = document.createElement("option");
         opt.value = p.id;
         opt.textContent = p.name;
         select.appendChild(opt);
       });
-
       if (properties.length === 1) {
         select.value = properties[0].id;
         loadRooms(properties[0].id);
       }
     }
 
+    // Pobierz pokoje dla wybranego obiektu
     async function loadRooms(propertyId) {
-      const res = await fetch(`${API_ROOMS}?property_id=${propertyId}`, {
+      const res = await fetch(`${API_URL}/rooms?property_id=${propertyId}`, {
         headers: { "Authorization": "Bearer " + token }
       });
       const rooms = await res.json();
-      const select = document.getElementById("roomSelect");
+      const select = document.getElementById("room_id");
       select.innerHTML = "";
-
       rooms.forEach(r => {
         const opt = document.createElement("option");
         opt.value = r.id;
         opt.textContent = r.name;
         select.appendChild(opt);
       });
-
-      if (rooms.length === 1) {
-        select.value = rooms[0].id;
-      }
     }
 
-    document.getElementById("propertySelect").addEventListener("change", e => {
+    document.getElementById("property_id").addEventListener("change", (e) => {
       loadRooms(e.target.value);
     });
 
-    function updateRemaining() {
-      const total = parseFloat(document.getElementById("totalPrice").value) || 0;
-      const deposit = parseFloat(document.getElementById("deposit").value) || 0;
-      document.getElementById("remainingAmount").value = Math.max(total - deposit, 0).toFixed(2);
-    }
-
+    // Obsługa formularza
     document.getElementById("addBookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const data = {
-        room_id: document.getElementById("roomSelect").value,
-        start_date: document.getElementById("startDate").value,
-        end_date: document.getElementById("endDate").value,
-        guest_name: document.getElementById("guestName").value,
-        guest_phone: document.getElementById("guestPhone").value,
-        guest_email: document.getElementById("guestEmail").value,
+      const booking = {
+        room_id: document.getElementById("room_id").value,
+        guest_name: document.getElementById("guest_name").value,
+        guest_phone: document.getElementById("guest_phone").value,
+        guest_email: document.getElementById("guest_email").value,
+        start_date: document.getElementById("start_date").value,
+        end_date: document.getElementById("end_date").value,
         adults: parseInt(document.getElementById("adults").value),
         children: parseInt(document.getElementById("children").value),
         pets: document.getElementById("pets").checked,
-        total_price: parseFloat(document.getElementById("totalPrice").value),
-        deposit: parseFloat(document.getElementById("deposit").value),
-        due_date: document.getElementById("dueDate").value,
+        total_price: parseFloat(document.getElementById("total_price").value) || 0,
+        deposit: parseFloat(document.getElementById("deposit").value) || 0,
+        due_date: document.getElementById("due_date").value || null,
         notes: document.getElementById("notes").value,
-        cleaning_task: document.getElementById("cleaningTask").checked,
-        safe_reminder: document.getElementById("safeReminder").checked
+        cleaning_task: document.getElementById("cleaning_task").checked,
+        safe_reminder: document.getElementById("safe_reminder").checked
       };
 
-      const res = await fetch(API_BOOKINGS, {
+      const res = await fetch(`${API_URL}/bookings`, {
         method: "POST",
         headers: {
-          "Authorization": "Bearer " + token,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(booking)
       });
 
       if (res.ok) {
-        alert("Rezerwacja dodana");
+        alert("Rezerwacja dodana!");
         window.location.href = "bookings.html";
       } else {
         const err = await res.json();
-        alert("Błąd: " + (err.error || "Nie udało się dodać rezerwacji"));
+        alert("Błąd: " + err.error);
       }
     });
 
