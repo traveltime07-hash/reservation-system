@@ -2,179 +2,160 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Szczegóły rezerwacji</title>
+  <title>Szczegóły rezerwacji - AWON</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>📖 Szczegóły rezerwacji</h1>
+  <div class="container">
+    <h1>Szczegóły rezerwacji</h1>
+    <form id="bookingForm">
+      <input type="hidden" id="booking_id">
 
-  <form id="bookingForm" class="form">
-    <label>Obiekt:
-      <input type="text" id="propertyName" class="input" readonly>
-    </label>
+      <label for="guest_name">Imię i nazwisko:</label>
+      <input type="text" id="guest_name">
 
-    <label>Pokój:
-      <input type="text" id="roomName" class="input" readonly>
-    </label>
+      <label for="guest_phone">Telefon:</label>
+      <input type="text" id="guest_phone">
 
-    <label>Data początkowa:
-      <input type="date" id="startDate" class="input" required>
-    </label>
+      <label for="guest_email">E-mail:</label>
+      <input type="email" id="guest_email">
 
-    <label>Data końcowa:
-      <input type="date" id="endDate" class="input" required>
-    </label>
+      <label for="start_date">Data przyjazdu:</label>
+      <input type="date" id="start_date">
 
-    <h3>Dane klienta</h3>
-    <label>Imię i nazwisko:
-      <input type="text" id="guestName" class="input" required>
-    </label>
-    <label>Telefon:
-      <input type="text" id="guestPhone" class="input">
-    </label>
-    <label>Email:
-      <input type="email" id="guestEmail" class="input">
-    </label>
+      <label for="end_date">Data wyjazdu:</label>
+      <input type="date" id="end_date">
 
-    <h3>Szczegóły pobytu</h3>
-    <label>Dorośli:
-      <input type="number" id="adults" class="input" min="1">
-    </label>
-    <label>Dzieci:
-      <input type="number" id="children" class="input" min="0">
-    </label>
-    <label>
-      <input type="checkbox" id="pets"> Zwierzęta
-    </label>
+      <label for="adults">Dorośli:</label>
+      <input type="number" id="adults" min="1">
 
-    <h3>Płatności</h3>
-    <label>Cena całkowita:
-      <input type="number" id="totalPrice" class="input" step="0.01">
-    </label>
-    <label>Zadatek:
-      <input type="number" id="deposit" class="input" step="0.01" oninput="updateRemaining()">
-    </label>
-    <label>Termin dopłaty:
-      <input type="date" id="dueDate" class="input">
-    </label>
-    <label>Dopłata (automatyczna):
-      <input type="number" id="remainingAmount" class="input" readonly>
-    </label>
+      <label for="children">Dzieci:</label>
+      <input type="number" id="children" min="0">
 
-    <h3>Inne</h3>
-    <label>Notatki:
-      <textarea id="notes" class="input"></textarea>
-    </label>
-    <label>
-      <input type="checkbox" id="cleaningTask"> Sprzątanie
-    </label>
-    <label>
-      <input type="checkbox" id="safeReminder"> Sejf z kluczami
-    </label>
+      <label for="pets">Zwierzęta:</label>
+      <input type="checkbox" id="pets">
 
-    <div class="actions">
-      <button type="submit" class="btn btn-primary">💾 Zapisz zmiany</button>
-      <button type="button" class="btn btn-danger" onclick="deleteBooking()">🗑 Usuń</button>
-      <button type="button" class="btn btn-secondary" onclick="window.location.href='bookings.html'">⬅ Powrót</button>
-    </div>
-  </form>
+      <label for="total_price">Cena całkowita:</label>
+      <input type="number" id="total_price" step="0.01">
+
+      <label for="deposit">Zadatek:</label>
+      <input type="number" id="deposit" step="0.01">
+
+      <label for="due_date">Termin dopłaty:</label>
+      <input type="date" id="due_date">
+
+      <label for="notes">Notatki:</label>
+      <textarea id="notes"></textarea>
+
+      <label>
+        <input type="checkbox" id="cleaning_task"> Zadanie sprzątania
+      </label>
+
+      <label>
+        <input type="checkbox" id="safe_reminder"> Powiadomienie o sejfie
+      </label>
+
+      <div class="form-buttons">
+        <button type="submit" class="btn-primary">💾 Zapisz zmiany</button>
+        <button type="button" class="btn-danger" id="deleteBtn">🗑 Usuń rezerwację</button>
+      </div>
+    </form>
+  </div>
 
   <script>
-    const API_BOOKINGS = "/bookings";
+    const API_URL = "http://localhost:3000"; // zmień na swój backend
     const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Musisz być zalogowany!");
+      window.location.href = "login.html";
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const bookingId = urlParams.get("id");
 
-    async function loadBooking() {
-      const res = await fetch(`${API_BOOKINGS}/${bookingId}`, {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      if (!res.ok) {
-        alert("Nie znaleziono rezerwacji");
-        window.location.href = "bookings.html";
-        return;
-      }
-      const b = await res.json();
-
-      document.getElementById("propertyName").value = b.property_name;
-      document.getElementById("roomName").value = b.room_name;
-      document.getElementById("startDate").value = b.start_date;
-      document.getElementById("endDate").value = b.end_date;
-      document.getElementById("guestName").value = b.guest_name || "";
-      document.getElementById("guestPhone").value = b.guest_phone || "";
-      document.getElementById("guestEmail").value = b.guest_email || "";
-      document.getElementById("adults").value = b.adults || 1;
-      document.getElementById("children").value = b.children || 0;
-      document.getElementById("pets").checked = b.pets;
-      document.getElementById("totalPrice").value = b.total_price || "";
-      document.getElementById("deposit").value = b.deposit || "";
-      document.getElementById("dueDate").value = b.due_date || "";
-      document.getElementById("remainingAmount").value = (b.total_price - b.deposit) || 0;
-      document.getElementById("notes").value = b.notes || "";
-      document.getElementById("cleaningTask").checked = b.cleaning_task;
-      document.getElementById("safeReminder").checked = b.safe_reminder;
+    if (!bookingId) {
+      alert("Brak ID rezerwacji");
+      window.location.href = "bookings.html";
     }
 
-    function updateRemaining() {
-      const total = parseFloat(document.getElementById("totalPrice").value) || 0;
-      const deposit = parseFloat(document.getElementById("deposit").value) || 0;
-      document.getElementById("remainingAmount").value = Math.max(total - deposit, 0).toFixed(2);
+    async function loadBooking() {
+      const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const b = await res.json();
+
+      document.getElementById("booking_id").value = b.id;
+      document.getElementById("guest_name").value = b.guest_name || "";
+      document.getElementById("guest_phone").value = b.guest_phone || "";
+      document.getElementById("guest_email").value = b.guest_email || "";
+      document.getElementById("start_date").value = b.start_date || "";
+      document.getElementById("end_date").value = b.end_date || "";
+      document.getElementById("adults").value = b.adults || 1;
+      document.getElementById("children").value = b.children || 0;
+      document.getElementById("pets").checked = b.pets || false;
+      document.getElementById("total_price").value = b.total_price || 0;
+      document.getElementById("deposit").value = b.deposit || 0;
+      document.getElementById("due_date").value = b.due_date || "";
+      document.getElementById("notes").value = b.notes || "";
+      document.getElementById("cleaning_task").checked = b.cleaning_task || false;
+      document.getElementById("safe_reminder").checked = b.safe_reminder || false;
     }
 
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const data = {
-        start_date: document.getElementById("startDate").value,
-        end_date: document.getElementById("endDate").value,
-        guest_name: document.getElementById("guestName").value,
-        guest_phone: document.getElementById("guestPhone").value,
-        guest_email: document.getElementById("guestEmail").value,
+      const booking = {
+        guest_name: document.getElementById("guest_name").value,
+        guest_phone: document.getElementById("guest_phone").value,
+        guest_email: document.getElementById("guest_email").value,
+        start_date: document.getElementById("start_date").value,
+        end_date: document.getElementById("end_date").value,
         adults: parseInt(document.getElementById("adults").value),
         children: parseInt(document.getElementById("children").value),
         pets: document.getElementById("pets").checked,
-        total_price: parseFloat(document.getElementById("totalPrice").value),
-        deposit: parseFloat(document.getElementById("deposit").value),
-        due_date: document.getElementById("dueDate").value,
+        total_price: parseFloat(document.getElementById("total_price").value) || 0,
+        deposit: parseFloat(document.getElementById("deposit").value) || 0,
+        due_date: document.getElementById("due_date").value || null,
         notes: document.getElementById("notes").value,
-        cleaning_task: document.getElementById("cleaningTask").checked,
-        safe_reminder: document.getElementById("safeReminder").checked
+        cleaning_task: document.getElementById("cleaning_task").checked,
+        safe_reminder: document.getElementById("safe_reminder").checked
       };
 
-      const res = await fetch(`${API_BOOKINGS}/${bookingId}`, {
+      const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
         method: "PUT",
-        headers: { 
-          "Authorization": "Bearer " + token,
-          "Content-Type": "application/json"
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(booking)
       });
 
       if (res.ok) {
-        alert("Zapisano zmiany");
+        alert("Zapisano zmiany!");
         window.location.href = "bookings.html";
       } else {
         const err = await res.json();
-        alert("Błąd: " + (err.error || "Nie udało się zapisać"));
+        alert("Błąd: " + err.error);
       }
     });
 
-    async function deleteBooking() {
-      if (!confirm("Na pewno usunąć tę rezerwację?")) return;
+    document.getElementById("deleteBtn").addEventListener("click", async () => {
+      if (!confirm("Na pewno usunąć rezerwację?")) return;
 
-      const res = await fetch(`${API_BOOKINGS}/${bookingId}`, {
+      const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + token }
       });
 
       if (res.ok) {
-        alert("Rezerwacja usunięta");
+        alert("Rezerwacja usunięta!");
         window.location.href = "bookings.html";
       } else {
         const err = await res.json();
-        alert("Błąd: " + (err.error || "Nie udało się usunąć"));
+        alert("Błąd: " + err.error);
       }
-    }
+    });
 
     loadBooking();
   </script>
