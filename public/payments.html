@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Płatności</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>💳 Płatności</h1>
+    <p id="message">Ładowanie płatności...</p>
+    <div id="paymentsList"></div>
+    <a href="dashboard.html">⬅ Powrót do panelu</a>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    async function loadPayments() {
+      try {
+        const res = await fetch("/api/payments", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Nie udało się pobrać listy płatności.");
+
+        const payments = await res.json();
+        const listDiv = document.getElementById("paymentsList");
+        document.getElementById("message").innerText = "";
+
+        if (payments.length === 0) {
+          listDiv.innerHTML = "<p>Brak płatności.</p>";
+          return;
+        }
+
+        listDiv.innerHTML = payments.map(p => `
+          <div class="form-card" style="margin-bottom: 1rem; text-align: left;">
+            <h3>🏠 Obiekt: ${p.property_name || "Nieznany"}</h3>
+            <p><strong>Kwota:</strong> ${p.amount} zł</p>
+            <p><strong>Status:</strong> ${p.status || "oczekująca"}</p>
+            <p><strong>Data:</strong> ${new Date(p.created_at).toLocaleDateString("pl-PL")}</p>
+          </div>
+        `).join("");
+      } catch (err) {
+        document.getElementById("message").innerText = err.message;
+      }
+    }
+
+    loadPayments();
+  </script>
+</body>
+</html>
