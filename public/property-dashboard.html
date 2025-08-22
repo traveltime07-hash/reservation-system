@@ -7,53 +7,75 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="form-card">
-    <h1 id="propertyName">🏨 Obiekt</h1>
-    <nav>
-      <a href="dashboard.html">⬅ Powrót do listy obiektów</a> |
-      <a href="add-room.html">➕ Dodaj pokój</a>
-    </nav>
-    <h2>Pokoje</h2>
+  <div class="dashboard">
+    <h1 id="propertyName">🏡 Panel obiektu</h1>
+    <button onclick="window.location.href='dashboard.html'">⬅ Powrót do wszystkich obiektów</button>
+
+    <h2>Lista pokoi</h2>
     <div id="roomsList"></div>
   </div>
 
   <script>
     const token = localStorage.getItem("token");
-    if (!token) window.location.href = "login.html";
+    if (!token) {
+      window.location.href = "login.html";
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const propertyId = urlParams.get("property_id");
 
     if (!propertyId) {
-      alert("Brak ID obiektu. Wejdź przez panel.");
+      alert("Brak ID obiektu. Wejdź przez panel główny.");
       window.location.href = "dashboard.html";
     }
 
     async function loadProperty() {
-      const res = await fetch(`/api/properties/${propertyId}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const property = await res.json();
-      document.getElementById("propertyName").innerText = `🏨 ${property.name}`;
-    }
+      try {
+        // Pobierz szczegóły obiektu
+        const propRes = await fetch(`/api/properties/${propertyId}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!propRes.ok) throw new Error("Nie udało się pobrać obiektu");
+        const property = await propRes.json();
+        document.getElementById("propertyName").innerText = `🏡 ${property.name} – panel obiektu`;
 
-    async function loadRooms() {
-      const res = await fetch(`/api/properties/${propertyId}/rooms`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const rooms = await res.json();
-      const list = document.getElementById("roomsList");
-      list.innerHTML = "";
-      rooms.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "room-item";
-        div.innerHTML = `<strong>${r.name}</strong> (miejsca: ${r.capacity})<br>${r.description || ""}`;
-        list.appendChild(div);
-      });
+        // Pobierz listę pokoi
+        const res = await fetch(`/api/properties/${propertyId}/rooms`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Nie udało się pobrać pokoi");
+
+        const rooms = await res.json();
+        const roomsList = document.getElementById("roomsList");
+        roomsList.innerHTML = "";
+
+        if (rooms.length === 0) {
+          roomsList.innerHTML = "<p>Brak pokoi w tym obiekcie.</p>";
+          return;
+        }
+
+        rooms.forEach(room => {
+          const div = document.createElement("div");
+          div.classList.add("room-card");
+          div.innerHTML = `
+            <h3>${room.name} (${room.capacity} os.)</h3>
+            <p>${room.description || "Brak opisu"}</p>
+            <button onclick="window.location.href='add-booking.html?property_id=${propertyId}&room_id=${room.id}'">
+              ➕ Dodaj rezerwację
+            </button>
+            <button onclick="window.location.href='room-bookings.html?property_id=${propertyId}&room_id=${room.id}'">
+              📅 Zarządzaj rezerwacjami
+            </button>
+          `;
+          roomsList.appendChild(div);
+        });
+
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
     loadProperty();
-    loadRooms();
   </script>
 </body>
 </html>
